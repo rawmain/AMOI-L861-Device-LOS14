@@ -49,7 +49,7 @@ typedef struct {
      * SVs were used for computing the most recent position fix.
      */
     bool used_in_fix;
-} MTKLegacyGnssSvInfo;
+} MTKLegacy2GnssSvInfo;
 
 /** Represents GNSS SV status. */
 typedef struct {
@@ -61,7 +61,7 @@ typedef struct {
 
     /** Contains an array of GNSS SV information. */
     MTKLegacyGnssSvInfo   sv_list[GNSS_MAX_SVS];
-} MTKLegacyGnssSvStatus;
+} MTKLegacy2GnssSvStatus;
 
 /**
  * Callback with GNSS SV status information.
