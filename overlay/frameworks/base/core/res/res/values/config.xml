@@ -21,13 +21,13 @@
 
     <!-- Defines the system property to set for performance profile xe: sys.cpu.modes. Leave it
          blank if the device do not support performance profiles -->
-    <add-resource type="string" name="config_perf_profile_prop">sys.perf.profile</add-resource>
+    <!-- <add-resource type="string" name="config_perf_profile_prop">sys.perf.profile</add-resource> -->
 
     <!-- When config_perf_profile_prop is defined, this value MUST be the index of
          one of the listes values in frameworks/base/core/res/res/values/cm_arrays.xml
          for "perf_profile_values" array. Leave it blank if the device do not support
          performance profiles  -->
-    <add-resource type="string" name="config_perf_profile_default_entry">1</add-resource>
+    <!-- <add-resource type="string" name="config_perf_profile_default_entry">1</add-resource> -->
 
 		
     <!-- Enable the electron beam -->
@@ -92,18 +92,18 @@
     </string-array>
 
     <!-- Set of NetworkInfo.getType() that reflect data usage. -->
-    <add-resource type="integer-array" translatable="false" name="config_data_usage_network_types">
-        <item>0</item> <!-- TYPE_MOBILE -->
-        <item>2</item> <!-- TYPE_MOBILE_MMS -->
-        <item>3</item> <!-- TYPE_MOBILE_SUPL -->
-        <item>4</item> <!-- TYPE_MOBILE_DUN -->
-        <item>5</item> <!-- TYPE_MOBILE_HIPRI -->
-        <item>10</item> <!-- TYPE_MOBILE_FOTA -->
-        <item>12</item> <!-- TYPE_MOBILE_CBS -->
-        <item>14</item> <!-- TYPE_MOBILE_IA -->
-        <item>40</item> <!-- TYPE_MOBILE_XCAP -->
-        <item>41</item> <!-- TYPE_MOBILE_RCS -->
-    </add-resource>
+    <!-- <add-resource type="integer-array" translatable="false" name="config_data_usage_network_types"> -->
+        <!-- <item>0</item> --> <!-- TYPE_MOBILE --> 
+        <!-- <item>2</item> --> <!-- TYPE_MOBILE_MMS --> 
+        <!-- <item>3</item> --> <!-- TYPE_MOBILE_SUPL --> 
+        <!-- <item>4</item> --> <!-- TYPE_MOBILE_DUN --> 
+        <!-- <item>5</item> --> <!-- TYPE_MOBILE_HIPRI --> 
+        <!-- <item>10</item> --> <!-- TYPE_MOBILE_FOTA --> 
+        <!-- <item>12</item> --> <!-- TYPE_MOBILE_CBS --> 
+        <!-- <item>14</item> --> <!-- TYPE_MOBILE_IA --> 
+        <!-- <item>40</item> --> <!-- TYPE_MOBILE_XCAP --> 
+        <!-- <item>41</item> --> <!-- TYPE_MOBILE_RCS --> 
+    <!-- </add-resource> -->
 
  
     <!-- Flag specifying whether WFC over IMS is available on device -->
@@ -116,7 +116,7 @@
  
     <!-- Flag indicating emergency calls will always use IMS irrespective of the state of
     the IMS connection -->
-    <add-resource type="bool" name="useImsAlwaysForEmergencyCall">false</add-resource>
+    <!-- <add-resource type="bool" name="useImsAlwaysForEmergencyCall">false</add-resource> -->
 
     <!-- Flag indicating whether the IMS service can be turned off. If false then
         the service will not be turned-off completely (the ImsManager.turnOffIms() will
@@ -156,7 +156,7 @@
     <bool name="config_wifi_background_scan_support">true</bool>
     
     <!-- Disable IpReachability monitor -->
-    <add-resource type="bool" name="config_wifi_ipreachability_monitor">false</add-resource>
+    <!-- <add-resource type="bool" name="config_wifi_ipreachability_monitor">false</add-resource> -->
 
     <!-- Wifi DualBand -->
     <bool name="config_wifi_dual_band_support">true</bool>    
@@ -168,10 +168,10 @@
     <bool name="config_intrusiveBatteryLed">true</bool>
 
     <!-- Does the notification LED support multiple colors? Used to decide if the user can change the colors -->
-    <add-resource type="bool" name="config_multiColorNotificationLed">true</add-resource>
+    <!-- <add-resource type="bool" name="config_multiColorNotificationLed">true</add-resource> -->
 
     <!-- Does the battery LED support multiple colors? Used to decide if the user can change the colors -->
-    <add-resource type="bool" name="config_multiColorBatteryLed">true</add-resource>
+    <!-- <add-resource type="bool" name="config_multiColorBatteryLed">true</add-resource> -->
 
     <!-- Default color for notification LED is green. -->
     <color name="config_defaultNotificationColor">#ff00ff00</color>

@@ -18,5 +18,5 @@
 -->
 <resources>
     <!-- Default for Settings.Global.WIFI_IDLE_MS (15 minutes) -->
-    <add-resource type="integer" name="def_wifi_idle_ms">30000</add-resource>
+    <!-- <add-resource type="integer" name="def_wifi_idle_ms">30000</add-resource> -->
 </resources>
