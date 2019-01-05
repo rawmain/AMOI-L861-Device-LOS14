@@ -1,5 +1,5 @@
 # ==============================================
-# Policy File of /system/bin/fuelgauged Executable File 
+# Policy File of /system/bin/fuelgauged Executable File
 
 
 # ==============================================
@@ -22,7 +22,7 @@ type fuelgauged_exec , exec_type, file_type;
 # ==============================================
 
 init_daemon_domain(fuelgauged)
-# permissive fuelgauged;
+#permissive fuelgauged;
 #unconfined_domain(fuelgauged)
 #write_klog(fuelgauged)
 

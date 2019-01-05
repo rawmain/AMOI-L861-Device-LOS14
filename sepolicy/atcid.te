@@ -1,5 +1,5 @@
 # ==============================================
-# Policy File of /system/binatcid Executable File 
+# Policy File of /system/binatcid Executable File
 
 
 # ==============================================
@@ -48,3 +48,6 @@ allow atcid system_file:file execute_no_trans;
 allow atcid self:rawip_socket create;
 allow atcid self:rawip_socket getopt;
 allow atcid self:rawip_socket setopt;
+
+# Nougat
+allow atcid sysfs:file { read open };

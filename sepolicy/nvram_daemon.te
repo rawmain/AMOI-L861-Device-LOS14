@@ -1,5 +1,5 @@
 # ==============================================
-# Policy File of /system/binnvram_daemon Executable File 
+# Policy File of /system/binnvram_daemon Executable File
 
 
 # ==============================================
@@ -61,7 +61,7 @@ allow nvram_daemon platformblk_device:dir search;
 
 # Purpose: for property set
 allow nvram_daemon property_socket:sock_file write;
-allow nvram_daemon sysfs:file write;
+#allow nvram_daemon sysfs:file write;
 allow nvram_daemon self:capability { fowner chown dac_override fsetid };
 
 allow nvram_daemon system_data_file:dir {create write add_name};
@@ -74,3 +74,17 @@ allow nvram_daemon block_device:dir search;
 allow nvram_daemon system_data_file:file { write open setattr };
 allow nvram_daemon system_data_file:file { read write create setattr };
 
+# Nougat
+allow nvram_daemon sysfs:file { write read open };
+allow nvram_daemon rootfs:dir { read open };
+allow nvram_daemon rootfs:file r_file_perms;
+allow nvram_daemon toolbox_exec:file rx_file_perms;
+#allow nvram_daemon default_prop:property_service set;
+allow nvram_daemon rootfs:lnk_file { getattr };
+allow nvram_daemon msensor_device:chr_file r_file_perms;
+set_prop(nvram_daemon, nvram_prop)
+set_prop(nvram_daemon, wmt_prop) 
+allow nvram_daemon block_device:dir search;
+
+# boot_mode 
+allow nvram_daemon sysfs_boot_mode:file r_file_perms; 

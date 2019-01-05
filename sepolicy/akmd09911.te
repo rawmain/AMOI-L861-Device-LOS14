@@ -1,5 +1,5 @@
 # ==============================================
-# Policy File of /system/binakmd09911 Executable File 
+# Policy File of /system/binakmd09911 Executable File
 
 
 # ==============================================
@@ -35,3 +35,6 @@ allow akmd09911 akmd8963_access_file2:file { setattr getattr open read write};
 allow akmd09911 system_data_file:dir { write add_name create setattr };
 allow akmd09911 system_data_file:file { open write read create setattr};
 allow akmd09911 msensor_data_file:file { open write read create setattr};
+
+# Nougat
+allow akmd09911 rootfs:lnk_file { getattr };

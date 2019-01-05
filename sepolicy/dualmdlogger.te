@@ -53,7 +53,7 @@ allow dualmdlogger tmpfs:lnk_file read;
 # Purpose : [DUALMDLOGGER] [dualmdlogger usb logging tcp_socket]
 # Package: system/bin/dualmdlogger
 
-allow dualmdlogger fuse:dir search;
+#allow dualmdlogger fuse:dir search;
 allow dualmdlogger node:tcp_socket node_bind;
 allow dualmdlogger port:tcp_socket name_bind;
 allow dualmdlogger self:tcp_socket { write read bind create setopt accept listen };

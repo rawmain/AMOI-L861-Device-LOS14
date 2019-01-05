@@ -1,5 +1,5 @@
 # ==============================================
-# Policy File of /system/binbatterywarning Executable File 
+# Policy File of /system/binbatterywarning Executable File
 
 
 # ==============================================
@@ -32,3 +32,7 @@ binder_use(batterywarning)
 # Operation : Migration
 # Purpose : allow battery warning use AMS to send broadcast through binder call
 allow batterywarning system_server:binder call;
+
+# Nougat
+allow batterywarning sysfs:file r_file_perms;
+allow batterywarning rootfs:lnk_file { getattr };

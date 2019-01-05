@@ -24,15 +24,15 @@ allow mediaserver self:capability sys_nice;
 # Date : WK14.32
 # Operation : Migration
 # Purpose : Set audio driver permission to access SD card for debug purpose and accss NVRam.
-allow mediaserver fuse:dir { write create add_name };
-allow mediaserver fuse:file create;
+allow mediaserver fuse:dir { write create add_name remove_name };
+allow mediaserver fuse:file ( create unlink );
 allow mediaserver nvram_data_file:dir { add_name write search };
 allow mediaserver nvram_data_file:file { write getattr setattr read create open };
 allow mediaserver nvram_data_file:lnk_file read;
 allow mediaserver nvdata_file:dir { add_name write search };
 allow mediaserver nvdata_file:file { write getattr setattr read create open };
-allow mediaserver fuse:dir remove_name;
-allow mediaserver fuse:file unlink;
+#allow mediaserver fuse:dir remove_name;
+#allow mediaserver fuse:file unlink;
 
 # Date : WK14.34
 # Operation : Migration
@@ -436,7 +436,13 @@ allow mediaserver platformblk_device:blk_file { open read write };
 # Nougat
 #allow mediaserver proc:file { read open ioctl };
 #allow mediaserver sysfs:file { read open };
-
+allow mnld apk_data_file:file { open read write create getattr };
+allow mnld rootfs:lnk_file { getattr };
+allow mnld storage_file:lnk_file { read };
+allow mnld mnt_user_file:lnk_file { read };
+allow mnld mnt_user_file:dir { search };
+allow mnld system_data_file:file { open read getattr };
+allow mnld wmt_prop:file r_file_perms;
 
 # camera
 allow mediaserver sensorservice_service:service_manager find;

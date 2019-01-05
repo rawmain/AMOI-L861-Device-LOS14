@@ -1,5 +1,5 @@
 # ==============================================
-# Policy File of /system/binem_svr Executable File 
+# Policy File of /system/binem_svr Executable File
 
 
 # ==============================================
@@ -67,3 +67,6 @@ allow em_svr tmpfs:lnk_file read;
 # for use binder
 binder_use(em_svr)
 binder_call(em_svr, surfaceflinger)
+
+# Nougat
+allow em_svr rootfs:lnk_file { getattr };

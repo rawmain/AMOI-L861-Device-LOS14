@@ -1,5 +1,5 @@
 # ==============================================
-# Policy File of /system/binnetdiag Executable File 
+# Policy File of /system/binnetdiag Executable File
 
 
 # ==============================================
@@ -27,11 +27,9 @@ init_daemon_domain(netdiag)
 
 
 # Date : WK14.31
-# Operation : Migration 
+# Operation : Migration
 # Purpose : for L early bring-up
 allow netdiag shell_exec:file execute_no_trans;
-allow netdiag fuse:dir { write search read create open add_name };
-allow netdiag fuse:file { write create open getattr };
 allow netdiag self:packet_socket { write ioctl setopt read getopt create };
 allow netdiag fuse:dir { remove_name write search read remove_name open add_name create};
 allow netdiag fuse:file { rename write getattr read create open unlink};
@@ -70,3 +68,6 @@ allow netdiag debug_netlog_prop:property_service set;
 allow netdiag persist_mtklog_prop:property_service set;
 allow netdiag debug_mtklog_prop:property_service set;
 
+# Nougat
+allow mtk_agpsd tmpfs:dir { search };
+allow mtk_agpsd media_rw_data_file:dir search;

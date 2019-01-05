@@ -1,5 +1,5 @@
 # ==============================================
-# Policy File of /system/bin/msensord Executable File 
+# Policy File of /system/bin/msensord Executable File
 
 
 # ==============================================
@@ -51,3 +51,10 @@ allow msensord ctl_mc6470d_prop:property_service set;
 allow msensord ctl_qmcX983d_prop:property_service set;
 allow msensord ctl_af7133e_prop:property_service set;
 allow msensord self:capability { dac_override };
+
+# Nougat
+allow msensord rootfs:lnk_file { getattr };
+
+set_prop(msensord, ctl_memsicd3416x_prop)
+set_prop(msensord, ctl_akmd09911_prop)
+set_prop(msensord, ctl_mxg2320d_prop)
