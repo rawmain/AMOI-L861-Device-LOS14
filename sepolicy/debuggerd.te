@@ -164,7 +164,7 @@ allow debuggerd proc_secmem:file r_file_perms;
 #add debuggerd policy
 allow debuggerd mnt_user_file:dir search;
 allow debuggerd mnt_user_file:lnk_file read;
-allow debuggerd procrank_exec:file { execute execute_no_trans };
+#allow debuggerd procrank_exec:file { execute execute_no_trans };
 #allow debuggerd storage_file:dir search;
 allow debuggerd storage_file:lnk_file read;
 
