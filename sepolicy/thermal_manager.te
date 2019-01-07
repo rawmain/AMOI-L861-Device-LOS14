@@ -35,4 +35,4 @@ allow thermal_manager self:capability dac_override;
 allow thermal_manager self:capability chown;
 allow thermal_manager self:capability fowner;
 allow thermal_manager self:capability fsetid;
-allow thermal_manager system_data_file:file { setattr write open create };
+#allow thermal_manager system_data_file:file { setattr write open create };

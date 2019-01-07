@@ -107,13 +107,13 @@ allow system_app qemu_pipe_device:chr_file rw_file_perms;
 # Operation : Migration
 # Package: org.simalliance.openmobileapi.service
 # Purpose : ALPS01820916, for SmartcardService
-allow system_app system_app_data_file:file execute;
+#allow system_app system_app_data_file:file execute;
 
 # Date : 2014/11/17
 # Operation: SQC
 # Purpose : [Settings][Battery module will call batterystats API, and it will read /sys/kernel/debug/wakeup_sources]
 # Package: com.android.settings
-allow system_app debugfs:file r_file_perms;
+#allow system_app debugfs:file r_file_perms;
 
 # Date : 2014/11/18
 # Operation : SQC
@@ -158,7 +158,7 @@ dontaudit system_app untrusted_app_tmpfs:file write;
 dontaudit system_app radio_data_file:dir search;
 #fix fm radio access
 allow system_app fm_device:chr_file { open read write ioctl };
-allow system_app sysfs:file { write };
+#allow system_app sysfs:file { write };
 allow system_app sysfs_devices_system_cpu:file { write };
 
-allow themeservice_app network_management_service:service_manager { find };
+#allow themeservice_app network_management_service:service_manager { find };

@@ -30,6 +30,6 @@ allow mediaserver bt_data_file:file read;
 #============= bluetooth ==============
 allow bluetooth platform_app_tmpfs:file write;
 allow bluetooth nvram_data_file:file { open read write };
-allow bluetooth platformblk_device:blk_file { open read write };
-allow bluetooth system_data_file:file { write };
+#allow bluetooth platformblk_device:blk_file { open read write };
+#allow bluetooth system_data_file:file { write };
 allow bluetooth stpbt_device:chr_file { open };

@@ -20,7 +20,7 @@ allow platform_app fm_device:chr_file  { read open write ioctl };
 # Purpose: enable drawing picture/texture in OpenGl environment for gallery3d
 # Package: com.android.gallery3d
 # add debugfs policy for MMProfile
-allow platform_app debugfs:file { read ioctl };
+#allow platform_app debugfs:file { read ioctl };
 
 # Date: 2014/09/05
 # Operation: FullUT

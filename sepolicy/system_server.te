@@ -182,12 +182,12 @@ allow system_server proc_secmem:file { rw_file_perms };
 # Date: WK14.47
 # Operation : Sanity
 # Purpose : for avoid SELinux warning after dex2oat execv failed
-allow system_server dex2oat_exec:file rx_file_perms;
+allow system_server dex2oat_exec:file r_file_perms;
 
 # Date: WK14.47
 # Operation : CTS
 # Purpose : for executing recovery.dex
-allow system_server system_data_file:file execute;
+#allow system_server system_data_file:file execute;
 
 # Date: WK14.47
 # Operation : MTBF
@@ -223,4 +223,4 @@ unix_socket_connect(system_server, wod_sim, epdg_wod)
 # Date: WK15.05
 # Purpose : for kill-switch should only grant to access frp partition, to be fix
 allow system_server platformblk_device:dir search;
-allow system_server platformblk_device:blk_file { read open getattr ioctl write };
+#allow system_server platformblk_device:blk_file { read open getattr ioctl write };

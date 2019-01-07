@@ -41,4 +41,4 @@ allow pq tmpfs:lnk_file read;
 # Nougat
 allow pq proc:file { read open ioctl };
 allow pq rootfs:lnk_file { getattr };
-set_prop(pq, pq_conf_prop)
+#set_prop(pq, pq_conf_prop)

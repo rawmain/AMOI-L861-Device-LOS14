@@ -22,9 +22,9 @@ allow blkid voldblk_device:blk_file { ioctl open read getattr };
 allow init socket_device:sock_file { create setattr write };
 allow blkid voldblk_device:blk_file { getattr read open ioctl };
 allow blkid_untrusted voldblk_device:blk_file { getattr read open ioctl };
-allow init system_file:file { execute_no_trans };
-allow init rootfs:file { execute_no_trans };
-allow init shell_exec:file { execute_no_trans };
+#allow init system_file:file { execute_no_trans };
+#allow init rootfs:file { execute_no_trans };
+#allow init shell_exec:file { execute_no_trans };
 allow init tmpfs:lnk_file { create };
 
 # Nougat

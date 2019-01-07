@@ -107,7 +107,7 @@ allow radio als_ps_device:chr_file { read open ioctl };
 # Date : 2015/01/20
 # Operation : IT
 # Purpose : for engineermode Usb PHY Tuning
-allow radio debugfs:file { read getattr };
+allow radio debugfs:file { getattr };
 
 # Date : 2015/01/21
 # Operation : IT
