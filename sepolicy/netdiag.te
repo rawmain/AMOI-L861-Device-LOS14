@@ -68,6 +68,30 @@ allow netdiag debug_netlog_prop:property_service set;
 allow netdiag persist_mtklog_prop:property_service set;
 allow netdiag debug_mtklog_prop:property_service set;
 
+
+# Date : WK15.29
+# Operation : Migration
+# Purpose : for device bring up, not to block early migration
+allow netdiag tmpfs:lnk_file read;
+#allow netdiag storage_file:dir search;
+allow netdiag storage_file:lnk_file read;
+allow netdiag mnt_user_file:dir search;
+allow netdiag mnt_user_file:lnk_file read;
+allow netdiag fuse:file create_file_perms;
+allow netdiag platform_app:dir search;
+allow netdiag servicemanager:binder call;
+allow netdiag untrusted_app:dir search;
+
+# Date : WK15.35
+# Operation : Migration
+# Purpose : for M migration SQC
+typeattribute netdiag mlstrustedsubject;
+allow netdiag connectivity_service:service_manager find;
+allow netdiag netstats_service:service_manager find;
+allow netdiag self:udp_socket connect;
+allow netdiag system_server:binder call;
+allow system_server netdiag:fd use;
+binder_use(netdiag)
 # Nougat
 allow mtk_agpsd tmpfs:dir { search };
 allow mtk_agpsd media_rw_data_file:dir search;

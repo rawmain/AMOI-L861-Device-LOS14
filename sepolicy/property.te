@@ -111,8 +111,8 @@ type ctl_rbfota_prop, property_type;
 
 #=============allow ipod==============
 type ipod_prop, property_type;
-type ctl_ipo_swap_prop, property_type;
 type ctl_ipod_prop, property_type;
+type ctl_ipo_swap_prop, property_type;
 
 #=============allow wmt==============
 type wmt_prop, property_type;
@@ -159,12 +159,10 @@ type pppd_gprs_prop, property_type;
 
 #=============allow wifi offload deamon  ==============
 type mtk_wod_prop, property_type;
-#=============allow hotknot deamon  ==============
-type hotknot_prop, property_type;
-#=============allow smart audio pa set property ==============
-type smart_audio_prop, property_type;
-#============= allow em set property ===============
-type mtk_em_auto_answer_prop, property_type;
+type persist_wod_prop, property_type;
+
+#=============allow program binary deamon  ==============
+type program_binary_prop, property_type;
 
 #=============allow radio to set mtk_volte_enable property==============
 type mtk_volte_prop, property_type;
@@ -175,5 +173,18 @@ type ctl_volte_stack_prop, property_type;
 type ctl_volte_ua_prop, property_type;
 type volte_prop, property_type;
 
-#=============allow program binary deamon  ==============
-type program_binary_prop, property_type;
+#=============allow hotknot deamon  ==============
+type hotknot_prop, property_type;
+type ctl_memsicd3416x_prop, property_type;
+type ctl_mxg2320d_prop, property_type;
+type serial_number_prop, property_type, mtk_property_type;
+type vold_encryption_type_prop, property_type;
+type nvram_prop, property_type, mtk_property_type;
+type pq_conf_prop, property_type, mtk_property_type;
+type ril_msim_power_prop, property_type, mtk_property_type;
+type ril_sim_inserted_status, property_type, mtk_property_type;
+
+#=============allow smart audio pa set property ==============
+type smart_audio_prop, property_type;
+#============= allow em set property ===============
+type mtk_em_auto_answer_prop, property_type;

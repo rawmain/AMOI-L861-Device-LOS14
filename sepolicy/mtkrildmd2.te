@@ -85,6 +85,7 @@ allow mtkrildmd2 emd_device:chr_file { read write open };
 allow mtkrildmd2 emd_device:chr_file ioctl;
 allow mtkrildmd2 platform_app:fd use;
 allow mtkrildmd2 radio:fd use;
+allow mtkrildmd2 radio_tmpfs:file write;
 
 # For emulator
 allow mtkrildmd2 qemu_pipe_device:chr_file { read write };

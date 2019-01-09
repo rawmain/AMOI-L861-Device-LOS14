@@ -1,8 +1,24 @@
-
 # ==============================================
 # MTK Policy Rule
 # ============
 
+# Device access
+allow bluetooth stpbt_device:chr_file rw_file_perms;
+
+# RIL SAP socket access
+allow bluetooth mtkrild:unix_stream_socket connectto;
+
+# NVRAM access
+#============= bluetooth ==============
+allow bluetooth nvram_data_file:dir search;
+allow bluetooth nvram_data_file:file rw_file_perms;
+allow bluetooth nvram_data_file:lnk_file read;
+allow bluetooth nvdata_file:dir search;
+allow bluetooth nvdata_file:file { read write getattr open };
+allow bluetooth nvdata_file:lnk_file r_file_perms;
+
+allow bluetooth block_device:dir search;
+allow bluetooth proc_secmem:file { read open };
 
 # Data : WK14.36
 # Operation : Migration
@@ -28,8 +44,18 @@ binder_call(bluetooth, mtkbt)
 allow mediaserver bt_data_file:file read;
 
 #============= bluetooth ==============
+# Temp FS access
 allow bluetooth platform_app_tmpfs:file write;
 allow bluetooth nvram_data_file:file { open read write };
 #allow bluetooth platformblk_device:blk_file { open read write };
 #allow bluetooth system_data_file:file { write };
 allow bluetooth stpbt_device:chr_file { open };
+
+# Date : WK15.36
+# Operation : Migration
+# Purpose: Allow bluetooth to access surfaceflinger
+allow bluetooth surfaceflinger:fifo_file { read write };
+allow bluetooth bt_prop:file { getattr open read };
+
+# boot_mode 
+allow bluetooth sysfs_boot_mode:file r_file_perms; 

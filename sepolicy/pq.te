@@ -38,7 +38,28 @@ allow pq init:unix_stream_socket connectto;
 allow pq property_socket:sock_file write;
 allow pq tmpfs:lnk_file read;
 
+# Date : 2015/08/27
+# Operation : Migration
+# Purpose : allow Binder IPC
+binder_use(pq)
+binder_call(pq, binderservicedomain)
+binder_service(pq)
+
+# Date : 2015/08/27
+# Operation : Migration
+# Purpose : Support pq_service
+
+allow pq graphics_device:dir search;
+allow pq pq_service:service_manager add;
+
+
+# Date : WK15.39
+# Operation : Migration
+# Purpose : Allow permission check
+allow pq pq_service:service_manager { find };
+allow pq permission_service:service_manager { find };
+
 # Nougat
 allow pq proc:file { read open ioctl };
 allow pq rootfs:lnk_file { getattr };
-#set_prop(pq, pq_conf_prop)
+set_prop(pq, pq_conf_prop)

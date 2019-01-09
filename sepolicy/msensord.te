@@ -7,7 +7,7 @@
 # ==============================================
 
 type msensord_exec , exec_type, file_type;
-type msensord ,domain;
+type msensord ,domain, domain_deprecated;
 
 # ==============================================
 # Android Policy Rule
@@ -55,6 +55,6 @@ allow msensord self:capability { dac_override };
 # Nougat
 allow msensord rootfs:lnk_file { getattr };
 
-#set_prop(msensord, ctl_memsicd3416x_prop)
+set_prop(msensord, ctl_memsicd3416x_prop)
 set_prop(msensord, ctl_akmd09911_prop)
-#set_prop(msensord, ctl_mxg2320d_prop)
+set_prop(msensord, ctl_mxg2320d_prop)

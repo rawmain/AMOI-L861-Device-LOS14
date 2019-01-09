@@ -6,8 +6,8 @@
 # Type Declaration
 # ==============================================
 
-type mtk_6620_launcher_exec , exec_type, file_type;
-type mtk_6620_launcher ,domain;
+type mtk_6620_launcher_exec, exec_type, file_type;
+type mtk_6620_launcher, domain, domain_deprecated;
 
 # ==============================================
 # Android Policy Rule
@@ -27,3 +27,6 @@ allow mtk_6620_launcher property_socket:sock_file write;
 allow mtk_6620_launcher stpwmt_device:chr_file { read write ioctl open };
 allow mtk_6620_launcher devpts:chr_file { read write };
 init_daemon_domain(mtk_6620_launcher)
+
+allow mtk_6620_launcher stpwmt_device:chr_file rw_file_perms;
+set_prop(mtk_6620_launcher, wmt_prop)

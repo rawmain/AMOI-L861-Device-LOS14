@@ -1,5 +1,5 @@
 # ==============================================
-# Policy File of /system/binmxg2320d Executable File 
+# Policy File of /system/bin/mxg2320d Executable File
 
 
 # ==============================================
@@ -21,10 +21,12 @@ type mxg2320d ,domain;
 # MTK Policy Rule
 # ==============================================
 
-#permissive mxg2320d;
+#permissive msensord;
 init_daemon_domain(mxg2320d)
 #unconfined_domain(mxg2320d)
 # Purpose : M-sensor daemon for access driver node
+allow mxg2320d msensor_device:chr_file rw_file_perms;
+allow mxg2320d gsensor_device:chr_file rw_file_perms;
 allow mxg2320d msensor_device:chr_file { open ioctl read write };
 allow mxg2320d gsensor_device:chr_file { open ioctl read write };
 allow mxg2320d input_device:dir { search open read write };

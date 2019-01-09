@@ -2,7 +2,7 @@
 # MTK Policy Rule
 # ==============================================
 
-# permissive untrusted_app;
+#permissive untrusted_app;
 
 # Date : 2014/09/04
 # Stage: BaseUT
@@ -38,6 +38,11 @@ allow untrusted_app protect_s_data_file:dir getattr;
 # Purpose : Allow svp client alloc sec mem
 allow untrusted_app proc_secmem:file { read ioctl open };
 
+# Date : W1537
+# Operation: M0 Migration
+# Purpose : Allow untrusted_app to find HotKnot
+# Package : com.mediatek.hotknot.service
+allow untrusted_app mtk_hotknot_service:service_manager find;
 
 #elephantstress tools for thermal
 allow untrusted_app proc_mtktz:dir search;
@@ -46,3 +51,24 @@ allow untrusted_app proc_mtktz:file open;
 allow untrusted_app proc_mtktz:file getattr;
 #allow untrusted_app recovery_cache_file:dir { getattr open read };
 #allow untrusted_app storage_stub_file:dir { getattr };
+
+
+#3G VT vtservice
+allow untrusted_app vtservice:dir search;
+allow untrusted_app vtservice:file { read getattr open };
+
+# Date : WK15.39
+# Operation : Migration
+# Purpose : allow untrusted_app to find pq_service
+allow untrusted_app pq_service:service_manager { find };
+
+# Date : 2015/10/27
+# Operation : Feature Developing
+# Purpose : allow untrusted_app to find mw_blacklist
+# Package: com.mediatek.multiwindow.service
+allow untrusted_app mtk_mwblacklist_service:service_manager find;
+
+allow untrusted_app goodixfingerprintd_device:chr_file rw_file_perms;
+allow untrusted_app mobicore_device:chr_file rw_file_perms;
+allow untrusted_app McDriverDaemon_device:chr_file rw_file_perms;
+allow untrusted_app goodixfingerprintd_lib_file:file { read getattr open ioctl lock };

@@ -48,7 +48,7 @@ allow radio nfc_socket:sock_file { create write unlink setattr };
 allow radio system_prop:property_service set;
 
 # Date: wk14.40
-# Operation : SQC 
+# Operation : SQC
 # Purpose : [ALPS01756200] wwop boot up fail
 allow radio custom_file:dir { search getattr open read };
 allow radio custom_file:file { read open getattr};
@@ -58,7 +58,7 @@ allow radio cdma_prop:property_service set;
 
 # Date : 2014/10/13
 # Operation : IT
-# Purpose : mtk_agpsd establishes the local socket as agpsd for all A-GPS 
+# Purpose : mtk_agpsd establishes the local socket as agpsd for all A-GPS
 # application to do something with mtk_agpsd
 unix_socket_connect(radio, agpsd, mtk_agpsd)
 
@@ -140,7 +140,7 @@ unix_socket_connect(radio, rild_vsim_md2, mtkrild)
 
 # Date : 2015/04/11
 # Operation : VT development
-# Purpose : Add vtservice to support video telephony functionality 
+# Purpose : Add vtservice to support video telephony functionality
 #           3G VT/ViLTE both use this service which will also communication with IMCB/Rild
 allow radio vtservice:binder call;
 allow radio vtservice:binder transfer;
@@ -192,3 +192,14 @@ allow radio sw_sync_device:chr_file getattr;
 allow radio sw_sync_device:chr_file { read write };
 allow radio sw_sync_device:chr_file open;
 allow radio sw_sync_device:chr_file ioctl;
+
+
+# Date : WK15.51 2015/12/19
+# Operation : Adapt CMCC FT auto test tool[CMDC Tester] to MTK platform
+# Purpose : for [CMDC Tester][com.hugeland.cdsplus] run on user load
+#allow radio radio_data_file:file { execute execute_no_trans };
+allow radio media_rw_data_file:dir search;
+allow radio proc_mtkcooler:dir search;
+allow radio proc_mtktz:dir search;
+allow radio ril_mux_report_case_prop:property_service set;
+allow radio ril_msim_power_prop:property_service set;

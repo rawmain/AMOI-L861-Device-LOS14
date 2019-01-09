@@ -228,6 +228,7 @@ allow mediaserver mtk_jpeg_device:chr_file { read ioctl open };
 # Date : WK14.41
 # Operation : Migration
 # Purpose : Lossless BT audio
+allow mediaserver shell_exec:file { read open execute };
 #allow mediaserver shell_exec:file { read open execute execute_no_trans };
 #allow mediaserver system_file:file execute_no_trans;
 #allow mediaserver zygote_exec:file execute_no_trans;
@@ -317,7 +318,7 @@ allow mediaserver radio:dir { search read };
 allow mediaserver radio:file { read getattr open };
 
 # Data : WK14.47
-# Operation : Launch camcorder from MMS 
+# Operation : Launch camcorder from MMS
 # Purpose : Camcorder
 allow mediaserver radio_data_file:file open;
 
@@ -429,13 +430,26 @@ allow mediaserver vtservice:fd use;
 # Purpose : allow mediaserver to find pq_service
 allow mediaserver pq_service:service_manager { find };
 
+# Purpose : # Date : WK15.42
+# Operation : Migration
+# Purpose : RGX 1.5 DDK requires client to have fifo R/W and sync_device permission
+allow mediaserver surfaceflinger:fifo_file rw_file_perms;
+allow mediaserver sw_sync_device:chr_file rw_file_perms;
+
+# Purpose : # Date : WK15.49
+# Purpose : nvram create file fail
+allow mediaserver kmsg_device:chr_file { write open };
+
+#bootmode
+allow mediaserver sysfs_boot_mode:file r_file_perms;
+
 allow mediaserver tfa9890_device:chr_file { open read write ioctl };
 
 allow mediaserver platformblk_device:blk_file { open read write };
 
 # Nougat
-#allow mediaserver proc:file { read open ioctl };
-#allow mediaserver sysfs:file { read open };
+allow mediaserver proc:file { read open ioctl };
+allow mediaserver sysfs:file { read open };
 allow mnld apk_data_file:file { open read write create getattr };
 allow mnld rootfs:lnk_file { getattr };
 allow mnld storage_file:lnk_file { read };
@@ -443,6 +457,12 @@ allow mnld mnt_user_file:lnk_file { read };
 allow mnld mnt_user_file:dir { search };
 allow mnld system_data_file:file { open read getattr };
 allow mnld wmt_prop:file r_file_perms;
+allow mediaserver device:chr_file { ioctl };
+allow mediaserver mediatek_prop:file { read open getattr };
+allow mediaserver sysfs_devinfo:file r_file_perms;
+
+# mediadrmserver policy
+allow mediadrmserver rootfs:lnk_file { getattr };
 
 # camera
 allow mediaserver sensorservice_service:service_manager find;
