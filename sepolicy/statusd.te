@@ -23,8 +23,6 @@ allow statusd nvdata_file:file { create write open read getattr setattr};
 allow statusd nvram_device:blk_file { read write open };
 allow statusd mmcblk0_block_device:blk_file { read write open };
 allow statusd nvdata_device:blk_file { read write open };
-allow statusd platformblk_device:blk_file { read write open };
-allow statusd platformblk_device:dir search;
 allow statusd property_socket:sock_file write;
 allow statusd radio_prop:property_service set;
 allow statusd ril_cdma_report_prop:property_service set;

@@ -17,7 +17,7 @@ unix_socket_connect(platform_app, agpsd, mtk_agpsd);
 # Purpose : FMRadio enable driver access permission for fmradio hardware device
 # Package: com.mediatek.fmradio
 allow platform_app fm_device:chr_file rw_file_perms;
-allow platform_app fm_device:chr_file  { read open write ioctl };
+
 # Date: 2014/08/22
 # Operation: Migration
 # Purpose: enable drawing picture/texture in OpenGl environment for gallery3d

@@ -141,7 +141,6 @@ allow system_app proc_secmem:file rw_file_perms;
 # Operation: SQC
 # Purpose: [Settings][Developer options module will communicate with all Services through binder call]
 # Package: com.android.settings
-binder_call(system_app, mtkbt)
 binder_call(system_app, MtkCodecService)
 
 # Date : 2014/11/26

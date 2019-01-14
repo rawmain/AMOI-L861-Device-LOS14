@@ -27,10 +27,8 @@ allow toolbox protect1_block_device:blk_file rw_file_perms;
 allow toolbox protect2_block_device:blk_file rw_file_perms;
 allow toolbox tmpfs:dir { write rmdir setattr remove_name create add_name };
 allow toolbox toolbox_tmpfs:file { create open setattr};
-allow toolbox platformblk_device:blk_file { setattr };
 
 # Nougat
-allow toolbox self:capability { chown };
+#allow toolbox self:capability { chown mknod };
 allow toolbox device:dir { write add_name };
 allow toolbox device:chr_file { create };
-allow toolbox init:fifo_file { write getattr };

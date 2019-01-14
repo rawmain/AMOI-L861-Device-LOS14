@@ -15,8 +15,6 @@ allow radio rild_mal_socket:sock_file write;
 allow radio rild_mal_at_socket:sock_file write;
 allow radio rild_mal_md2_socket:sock_file write;
 allow radio rild_mal_at_md2_socket:sock_file write;
-allow radio fuse:dir { write create add_name };
-allow radio fuse:file { read write getattr open create };
 ##violate never allow rule
 #allow radio sysfs:file write;
 ##violate never allow rule

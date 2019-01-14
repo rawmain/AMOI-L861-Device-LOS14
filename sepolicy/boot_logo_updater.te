@@ -29,8 +29,7 @@ init_daemon_domain(boot_logo_updater)
 # Purpose : for L early bring up.
 allow boot_logo_updater logo_block_device:blk_file { read open };
 allow boot_logo_updater mmcblk0_block_device:blk_file { open read };
-allow boot_logo_updater mmcblk_device:blk_file { read open };
-allow boot_logo_updater platformblk_device:blk_file { read open };
+
 
 # Date : WK14.32
 # Operation : Migration
@@ -43,7 +42,6 @@ allow boot_logo_updater system_prop:property_service set;
 allow boot_logo_updater graphics_device:chr_file { read write ioctl open };
 allow boot_logo_updater init:unix_stream_socket connectto;
 allow boot_logo_updater logo_device:chr_file { read open };
-allow boot_logo_updater platformblk_device:dir search;
 allow boot_logo_updater property_socket:sock_file write;
 allow boot_logo_updater self:capability dac_override;
 allow boot_logo_updater sysfs:file write;

@@ -9,10 +9,8 @@ allow sdcardd proc_lk_env:file { read write ioctl open };
 allow sdcardd misc_device:chr_file { read write open };
 #allow sdcardd platformblk_device:blk_file rw_file_perms;
 allow sdcardd para_block_device:blk_file rw_file_perms;
-allow sdcardd mmcblk_device:blk_file rw_file_perms;
-allow sdcardd platformblk_device:blk_file rw_file_perms;
 allow sdcardd block_device:dir search;
-allow sdcardd platformblk_device:dir search;
+#allow sdcardd platformblk_device:dir search;
 
 # Date : WK14.47
 # Purpose : create symbolic link from /mnt/shell/emulated to /storage/emulated

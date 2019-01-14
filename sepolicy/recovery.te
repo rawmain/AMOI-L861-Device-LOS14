@@ -3,9 +3,6 @@
 # ==============================================
 # recovery console (used in recovery init.rc for /sbin/recovery)
 
-# special factory reset & backup/restore needs permissive mode
-# permissive recovery;
-
 # Date : WK14.38
 # Operation : Migration
 # Purpose : for recovery operation
@@ -13,8 +10,6 @@ allow recovery misc_device:chr_file *;
 allow recovery block_device:dir *;
 allow recovery block_device:blk_file *;
 allow recovery system_block_device:blk_file *;
-allow recovery platformblk_device:dir *;
-allow recovery platformblk_device:blk_file *;
 allow recovery vfat:dir *;
 allow recovery vfat:file ~{ execute entrypoint };
 #allow recovery vfat:lnk_file *;
@@ -97,7 +92,7 @@ allow recovery self:capability sys_boot;
 # Date : WK14.46
 # Operation : Migration
 # Purpose : FOTA upgrade
-#allow recovery app_data_file:dir { write create add_name };
+# allow recovery app_data_file:dir { write create add_name };
 allow recovery app_data_file:dir { read open };
 #allow recovery app_data_file:file { read write create open };
 #allow recovery mobicore_data_file:dir { write remove_name search add_name };

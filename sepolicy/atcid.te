@@ -38,7 +38,6 @@ allow atcid wmtWifi_device:chr_file { write open };
 allow atcid block_device:dir search;
 allow atcid misc2_block_device:blk_file { read write open };
 allow atcid mmcblk0_block_device:blk_file { open read write };
-allow atcid platformblk_device:blk_file { read write open };
 allow atcid self:capability { net_admin net_raw };
 allow atcid self:udp_socket { create ioctl };
 allow atcid shell_exec:file execute;

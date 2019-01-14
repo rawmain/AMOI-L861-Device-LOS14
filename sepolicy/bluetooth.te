@@ -1,7 +1,3 @@
-# ==============================================
-# MTK Policy Rule
-# ============
-
 # Device access
 allow bluetooth stpbt_device:chr_file rw_file_perms;
 
@@ -20,36 +16,8 @@ allow bluetooth nvdata_file:lnk_file r_file_perms;
 allow bluetooth block_device:dir search;
 allow bluetooth proc_secmem:file { read open };
 
-# Data : WK14.36
-# Operation : Migration
-# Purpose : IPC communication between bluetooth and mtkbt (BT host), and bluetooth and mediaserver
-allow bluetooth bt_int_adp_socket:sock_file write;
-allow bluetooth mediaserver:unix_dgram_socket sendto;
-allow bluetooth mtkbt:unix_dgram_socket sendto;
-allow bluetooth mtkbt:unix_stream_socket connectto;
-allow bluetooth mtkbt:fd use;
-allow bluetooth init:unix_dgram_socket sendto;
-
-# Data : WK14.36
-# Operation : Migration
-# Purpose : BT host stack cached data access
-allow bluetooth bt_data_file:dir { write add_name remove_name search};
-allow bluetooth bt_data_file:file { open read write create setattr getattr append unlink rename};
-
-# Data : WK14.44
-# Operation : Migration
-# IPC communication between bluetooth and mtkbt
-binder_call(bluetooth, mtkbt)
-#============= mediaserver ==============
-allow mediaserver bt_data_file:file read;
-
-#============= bluetooth ==============
 # Temp FS access
 allow bluetooth platform_app_tmpfs:file write;
-allow bluetooth nvram_data_file:file { open read write };
-#allow bluetooth platformblk_device:blk_file { open read write };
-#allow bluetooth system_data_file:file { write };
-allow bluetooth stpbt_device:chr_file { open };
 
 # Date : WK15.36
 # Operation : Migration

@@ -7,7 +7,6 @@
 # Purpose : add dumpstate policy rule
 
 #allow dumpstate init:binder call;
-allow dumpstate mtkbt:binder call;
 allow dumpstate MtkCodecService:binder call;
 allow dumpstate nvram_agent_binder:binder call;
 allow dumpstate ppl_agent:binder call;

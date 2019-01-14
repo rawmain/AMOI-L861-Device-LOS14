@@ -14,7 +14,6 @@ type kpoc_charger_exec, exec_type, file_type;
 # Operation : Migration
 # Purpose : Start autokd
 init_daemon_domain(kpoc_charger)
-# permissive kpoc_charger;
 
 # Date : WK15.32
 # Operation : Migration
@@ -28,7 +27,7 @@ allow kpoc_charger self:capability sys_nice;
 allow kpoc_charger self:capability net_admin;
 allow kpoc_charger self:capability dac_override;
 allow kpoc_charger self:netlink_kobject_uevent_socket { create bind read setopt };
-allow kpoc_charger sysfs:file write;
+#allow kpoc_charger sysfs:file write;
 allow kpoc_charger debugfs:file { getattr };
 allow kpoc_charger graphics_device:chr_file { read write ioctl open };
 allow kpoc_charger kmsg_device:chr_file { write open };

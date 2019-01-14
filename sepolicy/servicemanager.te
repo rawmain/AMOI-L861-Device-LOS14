@@ -13,10 +13,3 @@ allow servicemanager fingerprintd:process { getattr };
 allow servicemanager mobicore:dir { r_dir_perms };
 allow servicemanager mobicore:file { r_file_perms };
 allow servicemanager mobicore:process { getattr };
-
-allow servicemanager zygote:dir { search };
-allow servicemanager zygote:file { read open };
-allow servicemanager zygote:process { getattr };
-allow zygote system_server:binder { call transfer };
-allow zygote activity_service:service_manager { find};
-allow system_server zygote:binder { call transfer };

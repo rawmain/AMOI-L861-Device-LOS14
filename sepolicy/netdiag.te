@@ -38,7 +38,7 @@ allow netdiag init:unix_stream_socket connectto;
 allow netdiag property_socket:sock_file write;
 allow netdiag self:capability { setuid net_raw setgid };
 allow netdiag shell_exec:file { read execute open };
-allow netdiag tmpfs:lnk_file read;
+#allow netdiag tmpfs:lnk_file read;
 allow netdiag domain:dir search;
 allow netdiag domain:file { read open };
 #/proc/3523/net/xt_qtaguid/ctrl & /proc

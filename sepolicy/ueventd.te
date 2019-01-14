@@ -7,8 +7,6 @@
 
 # add for sysfs:leds; pls check it on L official policy
 allow ueventd sysfs:file setattr;
-allow ueventd sysfs_md32:file { write open };
-
 
 #add for gmo+512M project
 allow ueventd platform_app:fd use;

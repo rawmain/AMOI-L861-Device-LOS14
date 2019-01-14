@@ -38,10 +38,6 @@ allow debuggerd exm0_device:chr_file r_file_perms;
 allow debuggerd shell_exec:file { execute execute_no_trans };
 allow debuggerd dex2oat_exec:file { execute execute_no_trans };
 
-# aee db dir and db files
-allow debuggerd fuse:dir create_dir_perms;
-allow debuggerd fuse:file create_file_perms;
-
 #data/anr
 allow debuggerd anr_data_file:dir create_dir_perms;
 allow debuggerd anr_data_file:file create_file_perms;

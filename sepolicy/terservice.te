@@ -29,7 +29,7 @@ init_daemon_domain(terservice)
 allow terservice terservice_service:service_manager add;
 
 # property service
-unix_socket_connect(terservice, property, init)
+#unix_socket_connect(terservice, property, init) #@daniel, use set_prop()
 #set_prop(terservice, init)
 allow terservice terservice_prop:property_service set;
 

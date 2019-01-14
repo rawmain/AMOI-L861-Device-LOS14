@@ -25,12 +25,11 @@ allow audiocmdservice_atci mediaserver:chr_file { read write ioctl open create s
 allow audiocmdservice_atci mediaserver:dir { write add_name search };
 allow audiocmdservice_atci nvram_device:blk_file { read write open };
 allow audiocmdservice_atci mmcblk0_block_device:blk_file { read write };
-allow audiocmdservice_atci platformblk_device:blk_file { read write open };
 
 allow audiocmdservice_atci fuse:file { create read write open };
 allow audiocmdservice_atci fuse:dir { search write add_name };
 
-allow audiocmdservice_atci tmpfs:lnk_file read;
+#allow audiocmdservice_atci tmpfs:lnk_file read;
 allow audiocmdservice_atci block_device:dir { write search };
 allow audiocmdservice_atci nvram_data_file:dir { add_name write search };
 allow audiocmdservice_atci nvdata_file:dir { add_name write search };

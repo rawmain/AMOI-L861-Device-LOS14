@@ -68,9 +68,3 @@ allow epdg_wod device:lnk_file create;
 # Purpose: Kill Process
 allow epdg_wod system_server:process { signal signull };
 allow epdg_wod kernel:process signal;
-
-#
-# TODO: NEED PATCH before 20150331, need to remove shell command
-#
-#allow epdg_wod shell_exec:file { read execute open execute_no_trans };
-
