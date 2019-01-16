@@ -448,8 +448,8 @@ endif
 TARGET_USES_LOGD := false
 
 # SELinux
-#BOARD_SEPOLICY_DIRS := \
-#       device/openstone/stonexone/sepolicy
+BOARD_SEPOLICY_DIRS := \
+       device/openstone/stonexone/sepolicy
 #
 POLICYVERS := 30
 
