@@ -117,3 +117,7 @@ allow recovery self:capability sys_resource;
 # Purpose : eMMC data partition resize for non encrypted device
 allow recovery fsck_exec:file { execute execute_no_trans };
 allow recovery resize_exec:file { execute execute_no_trans };
+
+# Remove AVC Denials
+allow recovery bootchart_data_file:dir { read };
+allow recovery bootchart_data_file:dir { open };
