@@ -8,7 +8,7 @@ import init.ssd.rc
 import init.no_ssd.rc
 import init.ssd_nomuser.rc
 import init.fon.rc
-import init.aee.rc
+# import init.aee.rc
 import init.trustonic.rc
 
 on early-init

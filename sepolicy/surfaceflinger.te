@@ -9,10 +9,10 @@ allow surfaceflinger debug_prop:property_service set;
 file_type_auto_trans(surfaceflinger, system_data_file, sf_bqdump_data_file);
 allow surfaceflinger anr_data_file:dir { write search create add_name };
 allow surfaceflinger anr_data_file:file { create write};
-allow surfaceflinger aee_exp_data_file:file write;
+#allow surfaceflinger aee_exp_data_file:file write;
 allow surfaceflinger custom_file:dir search;
 binder_call(surfaceflinger, debuggerd)
-allow surfaceflinger aee_dumpsys_data_file:file write;
+#allow surfaceflinger aee_dumpsys_data_file:file write;
 allow surfaceflinger RT_Monitor_device:chr_file { read ioctl open };
 
 # watch dog use shell to move debug file

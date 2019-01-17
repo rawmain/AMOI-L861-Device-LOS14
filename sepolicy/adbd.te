@@ -42,8 +42,8 @@ allow adbd adbd_data_file:file { write create unlink open setattr };
 allow adbd qemu_pipe_device:chr_file rw_file_perms;
 
 # user load adb pull /data/aee_exp db
-allow adbd aee_exp_data_file:dir r_dir_perms;
-allow adbd aee_exp_data_file:file r_file_perms;
+#allow adbd aee_exp_data_file:dir r_dir_perms;
+#allow adbd aee_exp_data_file:file r_file_perms;
 
 # call screencap by DDMS
 allow adbd surfaceflinger:dir search;
