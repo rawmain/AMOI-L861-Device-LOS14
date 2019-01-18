@@ -75,3 +75,5 @@ allow zygote sysfs_devinfo:file r_file_perms;
 
 # Remove AVC Denials
 allow zygote debugfs:file { getattr };
+allow zygote debugfs_trace_marker:file { open };
+allow zygote debugfs_trace_marker:file { write }; 
