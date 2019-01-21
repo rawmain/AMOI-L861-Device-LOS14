@@ -31,6 +31,15 @@
  * The following software/firmware and/or related documentation ("MediaTek Software")
  * have been modified by MediaTek Inc. All revisions are subject to any receiver's
  * applicable license agreements with MediaTek Inc.
+ *
+ * 2016/12/9:	modified by daniel_hk(https://github.com/danielhk)
+ * 2016/12/9:	Match Nougat callbacks
+ * 2016/12/10:	Adapted for Nougat's gnss struct
+ * 2017/2/8:	Try matching other fields in the new gnss struct
+ * 2017/2/10:	Try backward compatible with gps_status support (WIP)
+ * 2017/2/10:	Add override build property to select (gnss/gps)
+ * 2017/2/16:	Set constellation type according to svid (need extra info.)
+ *
  */
 #define MTK_LOG_ENABLE 1
 #include <errno.h>
@@ -62,13 +71,11 @@
 // #include <linux/mtgpio.h>
 
 #if EPO_SUPPORT
-   // for EPO file
-#include "curl.h"
-#include "easy.h"
+#include <curl/curl.h>
+#include <curl/easy.h>
 
 #define EPO_FILE "/data/misc/gps/EPO.DAT"
 #define EPO_FILE_HAL "/data/misc/gps/EPOHAL.DAT"
-#define QUARTER_FILE_HAL "/data/misc/gps/QEPOHAL.DAT"
 #define MTK_EPO_SET_PER_DAY  4
 #define MTK_EPO_MAX_DAY      30
 #define MTK_EPO_ONE_SV_SIZE  72
@@ -139,19 +146,19 @@ typedef struct {
     AGpsRilCallbacks* agps_ril_callbacks;
 } agps_context;
 
-typedef  unsigned int             UINT4;
-typedef  signed int               INT4;
+typedef  unsigned int		UINT4;
+typedef  signed int		INT4;
 
-typedef unsigned char           UINT8;
-typedef signed char             INT8;
+typedef unsigned char		UINT8;
+typedef signed char		INT8;
 
-typedef unsigned short int      UINT16;
-typedef signed short int        INT16;
+typedef unsigned short int	UINT16;
+typedef signed short int	INT16;
 
-typedef unsigned int            UINT32;
-typedef signed int              INT32;
+typedef unsigned int		UINT32;
+typedef signed int		INT32;
 
-typedef signed long long       INT64;
+typedef signed long long	INT64;
 
 #pragma pack(4)    //  Align by 4 byte
 typedef struct
@@ -161,33 +168,33 @@ typedef struct
    INT8 PRN;
    double TimeOffsetInNs;
    UINT16 state;
-   INT64 ReGpsTowInNs;                       // Re: Received
-   INT64 ReGpsTowUnInNs;                  // Re: Received, Un:Uncertainty
+   INT64 ReGpsTowInNs;			// Re: Received
+   INT64 ReGpsTowUnInNs;		// Re: Received, Un:Uncertainty
    double Cn0InDbHz;
-   double PRRateInMeterPreSec;          //  PR: Pseuderange
-   double PRRateUnInMeterPreSec;      //  PR: Pseuderange Un:Uncertainty
-   UINT16 AcDRState10;                         //  Ac:Accumulated, DR:Delta Range
-   double AcDRInMeters;                       //  Ac:Accumulated, DR:Delta Range
-   double AcDRUnInMeters;                   //  Ac:Accumulated, DR:Delta Range, Un:Uncertainty
-   double PRInMeters;                           //  PR: Pseuderange
+   double PRRateInMeterPreSec;		//  PR: Pseuderange
+   double PRRateUnInMeterPreSec;	//  PR: Pseuderange Un:Uncertainty
+   UINT16 AcDRState10;			//  Ac:Accumulated, DR:Delta Range
+   double AcDRInMeters;			//  Ac:Accumulated, DR:Delta Range
+   double AcDRUnInMeters;		//  Ac:Accumulated, DR:Delta Range, Un:Uncertainty
+   double PRInMeters;			//  PR: Pseuderange
    double PRUnInMeters;
-   double CPInChips;                             //  CP: Code Phase
-   double CPUnInChips;                         //  CP: Code Phase
-   float CFInhZ;                                     //  CP: Carrier Frequency
+   double CPInChips;			//  CP: Code Phase
+   double CPUnInChips;			//  CP: Code Phase
+   float CFInhZ;			//  CP: Carrier Frequency
    INT64 CarrierCycle;
    double CarrierPhase;
-   double CarrierPhaseUn;                    //  Un:Uncertainty
+   double CarrierPhaseUn;		//  Un:Uncertainty
    UINT8 LossOfLock;
    INT32 BitNumber;
    INT16 TimeFromLastBitInMs;
    double DopperShiftInHz;
-   double DopperShiftUnInHz;              //  Un:Uncertainty
+   double DopperShiftUnInHz;		//  Un:Uncertainty
    UINT8 MultipathIndicater;
    double SnrInDb;
-   double ElInDeg;                                //  El: elevation
-   double ElUnInDeg;                            //  El: elevation, Un:Uncertainty
-   double AzInDeg;                               //  Az: Azimuth
-   double AzUnInDeg;                           //  Az: Azimuth
+   double ElInDeg;			//  El: elevation
+   double ElUnInDeg;			//  El: elevation, Un:Uncertainty
+   double AzInDeg;			//  Az: Azimuth
+   double AzUnInDeg;			//  Az: Azimuth
    char UsedInFix;
 }MTK_GPS_MEASUREMENT;
 
@@ -215,6 +222,20 @@ typedef struct
    UINT32 length;
    UINT8 data[40];
 } MTK_GPS_NAVIGATION_EVENT;
+
+// work arround for AgpsStatus
+typedef struct {
+    size_t	size;
+    AGpsType	type;
+    AGpsStatusValue status;
+} AGpsStatus_v1;
+
+typedef struct {
+    size_t	size;
+    AGpsType	type;
+    AGpsStatusValue status;
+    uint32_t	ipaddr;
+} AGpsStatus_v2;
 #pragma pack()
 typedef struct{
     GpsUtcTime time;
@@ -236,7 +257,7 @@ agps_context g_agps_ctx;
 
 #if EPO_SUPPORT
 #define  GPS_EPO_FILE_LEN  20
-#define C_INVALID_TIMER ((timer_t)(-1))  /*invalid timer */
+#define C_INVALID_TIMER -1  /*invalid timer */
 static int gps_epo_period = 3;
 static int wifi_epo_period = 1;
 static int gps_epo_download_days = 30;
@@ -245,8 +266,6 @@ static int gps_epo_wifi_trigger = 0;
 static int gps_epo_file_count = 0;
 static char gps_epo_file_name[GPS_EPO_FILE_LEN] = {0};
 static char gps_epo_md_file_name[GPS_EPO_FILE_LEN] = {0};
-static char quarter_epo_file_name[GPS_EPO_FILE_LEN] = {0};
-static char quarter_epo_md_file_name[GPS_EPO_FILE_LEN] = {0};
 static int gps_epo_type = 0;    // o for G+G;1 for GPS only, default is G+G
 static int gnss_mode = 2;
 const char *mnl_prop_path[] = {
@@ -260,13 +279,6 @@ typedef struct retry_alarm
     timer_t fd;
 }RETRY_ALARM_T;
 static RETRY_ALARM_T retry_timer;
-typedef struct qepo_gps_time {
-    int wn;
-    int tow;
-    int sys_time;
-}QEPO_GPS_TIME_T;
-
-static QEPO_GPS_TIME_T gps_time;
 #endif
 /*****************************************************************************/
 /*    MTK device control                                                  */
@@ -320,12 +332,6 @@ enum {
     MNL_CMD_GPS_INJECT_LOCATION_REQ = 0x49,
 
     MNL_CMD_GPS_NLP_LOCATION_REQ = 0x4a,
-    MNL_CMD_GPS_LOCATION_SYNC_TO_AGPS = 0x4b,
-    MNL_CMD_GPS_QUARTER_EPO_UPDATE = 0x50,
-    MNL_CMD_GPS_QUARTER_EPO_REQ = 0x51,
-    MNL_CMD_UPDATE_QEPO_FILE_FAIL = 0x52,
-    MNL_CMD_UPDATE_QEPO_FILE_DONE = 0x53,
-    MNL_CMD_GPS_QUARTER_EPO_STATUS = 0x54,
     HAL_CMD_MEASUREMENT= 0x76,
     HAL_CMD_NAVIGATION= 0x77,
     HAL_CMD_SWITCH_AGPS_DEBUG_DONE = 0x44,
@@ -394,22 +400,19 @@ typedef struct {
 #define M_CLEANUP 2
 #define M_INIT  3
 #define M_THREAD_EXIT 4
-#define M_QUARTER_EPO 5
-#define M_QUARTER_EPO_EXIT 6
+#define M_MNLDIE 5
 typedef struct sync_lock
 {
     pthread_mutex_t mutx;
     pthread_cond_t con;
     int condtion;
-    int index;
 }SYNC_LOCK_T;
-static SYNC_LOCK_T lock_for_sync[] = {{PTHREAD_MUTEX_INITIALIZER, PTHREAD_COND_INITIALIZER, 0, 0},
-                                {PTHREAD_MUTEX_INITIALIZER, PTHREAD_COND_INITIALIZER, 0, 1},
-                                {PTHREAD_MUTEX_INITIALIZER, PTHREAD_COND_INITIALIZER, 0, 2},
-                                {PTHREAD_MUTEX_INITIALIZER, PTHREAD_COND_INITIALIZER, 0, 3},
-                                {PTHREAD_MUTEX_INITIALIZER, PTHREAD_COND_INITIALIZER, 0, 4},
-                                {PTHREAD_MUTEX_INITIALIZER, PTHREAD_COND_INITIALIZER, 0, 5},
-                                {PTHREAD_MUTEX_INITIALIZER, PTHREAD_COND_INITIALIZER, 0, 6}};
+static SYNC_LOCK_T lock_for_sync[] =   {{PTHREAD_MUTEX_INITIALIZER, PTHREAD_COND_INITIALIZER, 0},
+					{PTHREAD_MUTEX_INITIALIZER, PTHREAD_COND_INITIALIZER, 0},
+					{PTHREAD_MUTEX_INITIALIZER, PTHREAD_COND_INITIALIZER, 0},
+					{PTHREAD_MUTEX_INITIALIZER, PTHREAD_COND_INITIALIZER, 0},
+					{PTHREAD_MUTEX_INITIALIZER, PTHREAD_COND_INITIALIZER, 0},
+					{PTHREAD_MUTEX_INITIALIZER, PTHREAD_COND_INITIALIZER, 0}};
 
 const char* gps_native_thread = "GPS NATIVE THREAD";
 static GpsCallbacks_mtk callback_backup_mtk;
@@ -427,7 +430,6 @@ static float report_time_interval = 0;
 static int started = 0;
 static int nw_connected = 0;
 static int nw_type = 0;
-static int qepo_download_finished = 1;
 #define nw_wifi 0x00000001
 #define nw_data 0x00000000
 
@@ -443,6 +445,7 @@ EpoData epo_data;
 static int epo_download_failed = 0;
 static int epo_download_retry = 1;
 char chip_id[PROPERTY_VALUE_MAX];
+static int gps_mode = -1;
 
 #endif
 /*---------------------------------------------------------------------------*/
@@ -497,7 +500,6 @@ struct sockaddr_un cmd_local;
 struct sockaddr_un remote;
 socklen_t remotelen;
 
-
 /*****************************************************************************/
 /*AT command test state*/
 static int MNL_AT_TEST_FLAG = 0;
@@ -508,7 +510,6 @@ static int MNL_AT_SIGNAL_TEST_BEGIN = 0;
 
 int MNL_AT_SET_ALARM       = 0;
 int MNL_AT_CANCEL_ALARM    = 0;
-
 
 enum {
     MNL_AT_TEST_UNKNOWN = -1,
@@ -574,16 +575,6 @@ static int get_prop()
     }
 
     return ret;
-}
-static void init_condition(SYNC_LOCK_T *lock) {
-    int ret = 0;
-
-    ret = pthread_mutex_lock(&(lock->mutx));
-    lock->condtion = 0;
-    ret = pthread_mutex_unlock(&(lock->mutx));
-    DBG("ret mutex unlock = %d\n", ret);
-
-    return;
 }
 
 static void get_condition(SYNC_LOCK_T *lock)
@@ -718,6 +709,7 @@ int mtk_daemon_send(int sockfd, void* dest, char* buf, int size) {
        // unlink(soc_addr.sun_path);
     return ret;
 }
+
 static void mtk_gps_update_location(nlp_context * location)
 {
     FILE *fp = NULL;
@@ -906,14 +898,13 @@ int agps_set_server(AGpsType type, const char* hostname, int port) {
     int offset = 0;
     DBG("agps_set_server  type=%d hostname=[%s] port=%d\n", type, hostname, port);
 
-    /* buff_put_int(AGPS_FRAMEWORK_INFO_SET_SERVER, buff, &offset);
+    buff_put_int(AGPS_FRAMEWORK_INFO_SET_SERVER, buff, &offset);
     buff_put_int(type, buff, &offset);
     buff_put_string(hostname, buff, &offset);
     buff_put_int(port, buff, &offset);
 
     int res = mtk_daemon_send(g_agps_ctx.send_fd, MTK_HAL2MNLD, buff, sizeof(buff));
-    return res; */
-    return 0;
+    return res;
 }
 static const AGpsInterface mtkAGpsInterface = {
     sizeof(AGpsInterface),
@@ -971,14 +962,11 @@ void gps_ni_respond(int notif_id, GpsUserResponseType user_response) {
     mtk_daemon_send(g_agps_ctx.send_fd, MTK_HAL2MNLD, buff, sizeof(buff));
 }
 
-
-
 static const GpsNiInterface  mtkGpsNiInterface = {
     sizeof(GpsNiInterface),
     gps_ni_init,
     gps_ni_respond,
 };
-
 
 void agps_ril_init(AGpsRilCallbacks* callbacks) {
     DBG("agps_ril_init\n");
@@ -1114,7 +1102,7 @@ int mtk_start_daemon() { /*gps driver must exist before running the function*/
     sched_yield();
 
     while (count-- > 0) {
- #ifdef HAVE_LIBC_SYSTEM_PROPERTIES
+#ifdef HAVE_LIBC_SYSTEM_PROPERTIES
         if (pi == NULL) {
             pi = __system_property_find(GPS_MNL_DAEMON_PROP);
         }
@@ -1478,7 +1466,7 @@ typedef struct {
     int     cb_status_changed;
     int     sv_count;           /*used to count the number of received SV information*/
     GpsSvStatus   sv_status_gps;
-    MTKLegacyGnssSvStatus  sv_status_gnss;
+    GnssSvStatus  sv_status_gnss;
     GpsCallbacks  callbacks;
 #ifdef GPS_AT_COMMAND
    //     GpsTestResult test_result;
@@ -1506,7 +1494,6 @@ nmea_reader_update_utc_diff(NmeaReader* const r)
 
     r->utc_diff = time_utc - time_local;
 }
-
 
 static void
 nmea_reader_init(NmeaReader* const r)
@@ -1570,7 +1557,6 @@ nmea_reader_set_callback(NmeaReader* const r, GpsCallbacks* const cbs)
     }
 }
 
-
 static int
 nmea_reader_update_time(NmeaReader* const r, Token  tok)
 {
@@ -1612,7 +1598,7 @@ nmea_reader_update_time(NmeaReader* const r, Token  tok)
     localtime_r(&fix_time, &tm_local);
 
     fix_time += tm_local.tm_gmtoff;
-    DBG("fix_time: %d\n", fix_time);
+    DBG("fix_time: %ld\n", fix_time);
     r->fix.timestamp = (long long)fix_time * 1000;
     return 0;
 }
@@ -1642,7 +1628,6 @@ nmea_reader_update_date(NmeaReader* const r, Token  date, Token  time)
 
     return nmea_reader_update_time(r, time);
 }
-
 
 static double
 convert_from_hhmm(Token  tok)
@@ -1696,7 +1681,6 @@ typedef struct {
     pthread_t               thread;
 #if EPO_SUPPORT
     pthread_t               thread_epo;
-    pthread_t               thread_quarter_epo;
 #endif
     int                     control[2];
     int                     sockfd;
@@ -1711,43 +1695,12 @@ typedef struct {
 #if EPO_SUPPORT
     int                     epo_data_updated;
     int                     thread_epo_exit_flag;
-    int                     thread_epo_quarter_exit_flag;
 #endif
 } GpsState;
 
 static GpsState  _gps_state[1];
 #ifdef GPS_AT_COMMAND
-/*
-static int
-nmea_reader_update_at_test_result(NmeaReader* const r,
-                                  int Err_Code,
-                                  int Success_Num,
-                                  int Completed_Num,
-                                  int Avg_CNo,
-                                  int Dev_CNo)
-{
-    if (r==NULL) {
-        DBG("**NmeaReader is NULL !!");
-        return 0;
-    }
 
-    r->test_result.error_code = Err_Code;
-    r->test_result.theta = 0;
-    r->test_result.phi = 0;
-    r->test_result.success_num = Success_Num;
-    r->test_result.completed_num = Completed_Num;
-    r->test_result.avg_cno = Avg_CNo;
-    r->test_result.dev_cno = Dev_CNo;
-    r->test_result.avg_speed = 0;
-   /* if (r->callbacks.test_cb) {
-        r->callbacks.test_cb(&r->test_result);
-        DBG("**AT command test set callback!!");
-    } else {
-        VER("**AT Command test: no test result callback !!");
-    }
-    return 0;
-}
-*/
 static void
 sms_airtest_no_signal_report(int Err_Code,
                                   int Success_Num,
@@ -1810,7 +1763,6 @@ nmea_reader_update_bearing(NmeaReader* const r,
     return 0;
 }
 
-
 static int
 nmea_reader_update_speed(NmeaReader* const r,
                           Token        speed)
@@ -1844,123 +1796,6 @@ nmea_reader_update_accuracy(NmeaReader* const r,
     r->fix.accuracy = str2float(tok.p, tok.end);
     return 0;
 }
-
-#ifdef GPS_AT_COMMAND
-/*for GPS AT command test*/
-int
-mtk_gps_test_stop() {
-   GpsState*  s = _gps_state;
-   int err;
-   test_mode_flag = 1;
-
-   if (!s->init) {
-       ERR("%s: called with uninitialized state !!", __FUNCTION__);
-       return -1;
-   }
-   if ((err = mtk_stop())) {
-       ERR("mtk_stop err = %d", err);
-       return -1;
-   }
-
-   TRC();
-   gps_state_test_stop(s);
-
-   hal_test_data.test_num = 0;
-   hal_test_data.prn_num = 0;
-   hal_test_data.time_delay = 0;
-   MNL_AT_TEST_FLAG = 0;
-   MNL_AT_SIGNAL_MODE = 0;
-   MNL_AT_TEST_STATE = MNL_AT_TEST_UNKNOWN;
-
-   MNL_AT_SET_ALARM       = 0;
-   MNL_AT_CANCEL_ALARM    = 0;
-   MNL_AT_SIGNAL_TEST_BEGIN = 0;
-
-   // release the variable
-   Success_Num = 0;
-   Completed_Num = 0;
-   Wait_Num = 0;
-   CNo = 0;
-   DCNo = 0;
-   Dev_CNo = 0;
-   Err_Code = 1;
-   test_num = 0;
-
-   if (NULL != Dev_CNr) {
-       DBG("Free Dev_CNr");
-       free(Dev_CNr);
-   }
-   return 0;
-}
-
-int mtk_gps_test_start(int test_num, int prn_num, int time_delay, int test_mode) {
-   GpsState*  s = _gps_state;
-   int err;
-
-   if ((MNL_AT_TEST_STATE != MNL_AT_TEST_UNKNOWN) && test_mode_flag) {
-       DBG("[SMS test mode] Timeout, test_stop() before test_start()");
-       mtk_gps_test_stop();
-   }
-
-   hal_test_data.test_num = test_num;
-   hal_test_data.prn_num = prn_num;
-   hal_test_data.time_delay = time_delay;
-   time(&start_time);
-
-   //  ithis code is moved from stop function to here to keep avg value for AT%GPS(GNSS) or AT%GPS=?(GNSS=?)
-   Avg_CNo = 0;
-   Dev_CNr = (int*)malloc(sizeof(int)*hal_test_data.test_num);
-   memset(Dev_CNr, 0, test_num*sizeof(int));
-
-   if ((0 == hal_test_data.test_num) && (0 == test_mode)) {
-       ERR("%s: test number is 0!!", __FUNCTION__);
-       return -1;
-   }
-   if (1 == test_mode) {
-       DBG("Signal test mode");
-       MNL_AT_SIGNAL_MODE = 1;
-   } else {
-       DBG("Normal test mode");
-       MNL_AT_TEST_FLAG = 1;
-   }
-
-   if (!s->init) {
-       ERR("%s: called with uninitialized state !!", __FUNCTION__);
-       return -1;
-   }
-
-   MNL_AT_TEST_STATE = MNL_AT_TEST_INPROGRESS;
-
-   if ((err = mtk_start())) {
-       ERR("mtk_start err = %d", err);
-       MNL_AT_TEST_STATE = MNL_AT_TEST_UNKNOWN;
-       MNL_AT_TEST_FLAG = 0;
-       return -1;
-   }
-
-   TRC();
-   gps_state_test_start(s);
-   return 0;
-}
-
-int
-mtk_gps_test_inprogress() {
-   int ret = -1;
-
-   if ((MNL_AT_TEST_STATE == MNL_AT_TEST_DONE) || (MNL_AT_TEST_STATE == MNL_AT_TEST_RESULT_DONE)) {
-       DBG("**AT Command test done!!");
-       ret = MNL_AT_TEST_DONE;
-   } else if (MNL_AT_TEST_STATE == MNL_AT_TEST_INPROGRESS) {
-       DBG("**AT Command test is in progress!!");
-       ret = MNL_AT_TEST_INPROGRESS;
-   } else {
-       DBG("**AT Command test status unknown!!");
-       ret = MNL_AT_TEST_UNKNOWN;
-   }
-   return ret;
-}
-#endif
-
 #ifdef GPS_AT_COMMAND
 static void
 gps_state_test_sms_airtest_no_result_report()
@@ -2118,38 +1953,48 @@ nmea_reader_update_sv_status_gps(NmeaReader* r, int sv_index,
 
 static int
 nmea_reader_update_sv_status_gnss(NmeaReader* r, int sv_index,
-                              int id, Token elevation,
-                              Token azimuth, Token snr)
+				int id, Token elevation,
+				Token azimuth, Token snr)
 {
        // int prn = str2int(id.p, id.end);
     int prn = id;
+    GnssConstellationType ct;
 
     if ((prn <= 0) || (prn < 65 && prn > GPS_MAX_SVS)|| ((prn > 96) && (prn < 200))
        || (prn > 232) || (r->sv_count >= GNSS_MAX_SVS)) {
         VER("sv_status_gnss: ignore (%d)", prn);
         return 0;
     }
+
     sv_index = r->sv_count+r->sv_status_gnss.num_svs;
     if (GNSS_MAX_SVS <= sv_index) {
         ERR("ERR: sv_index=[%d] is larger than GNSS_MAX_SVS.\n", sv_index);
         return 0;
     }
-    r->sv_status_gnss.sv_list[sv_index].prn = prn;
-    r->sv_status_gnss.sv_list[sv_index].snr = str2float(snr.p, snr.end);
-    r->sv_status_gnss.sv_list[sv_index].elevation = str2int(elevation.p, elevation.end);
-    r->sv_status_gnss.sv_list[sv_index].azimuth = str2int(azimuth.p, azimuth.end);
+    ct = GNSS_CONSTELLATION_GLONASS;	// 65..96	:GLONASS
+    if (id < 33)
+	ct = GNSS_CONSTELLATION_GPS;	// 1..32	:GPS
+    else if (id > 200)
+	ct = GNSS_CONSTELLATION_BEIDOU;	// 201..232	:BEIDOU
+
+    r->sv_status_gnss.gnss_sv_list[sv_index].svid = prn;
+    r->sv_status_gnss.gnss_sv_list[sv_index].c_n0_dbhz = str2float(snr.p, snr.end);
+    r->sv_status_gnss.gnss_sv_list[sv_index].constellation = ct;
+    r->sv_status_gnss.gnss_sv_list[sv_index].elevation = str2int(elevation.p, elevation.end);
+    r->sv_status_gnss.gnss_sv_list[sv_index].azimuth = str2int(azimuth.p, azimuth.end);
+    r->sv_status_gnss.gnss_sv_list[sv_index].flags = GNSS_SV_FLAGS_NONE;
     if (1 == sv_used_in_fix[prn]) {
-        r->sv_status_gnss.sv_list[sv_index].used_in_fix = true;
-    } else {
-        r->sv_status_gnss.sv_list[sv_index].used_in_fix = false;
+	r->sv_status_gnss.gnss_sv_list[sv_index].flags |= GNSS_SV_FLAGS_USED_IN_FIX;
     }
+
     r->sv_count++;
-    VER("sv_status_gnss(%2d): %2d, %2f, %3f, %2f, %2d",
-       sv_index, r->sv_status_gnss.sv_list[sv_index].prn,
-       r->sv_status_gnss.sv_list[sv_index].elevation,
-       r->sv_status_gnss.sv_list[sv_index].azimuth,
-       r->sv_status_gnss.sv_list[sv_index].snr,
-       r->sv_status_gnss.sv_list[sv_index].used_in_fix);
+    VER("sv_status_gnss(%2d): %2d, %2f, %3f, %2f, %x",
+	sv_index, r->sv_status_gnss.gnss_sv_list[sv_index].prn,
+	r->sv_status_gnss.gnss_sv_list[sv_index].elevation,
+	r->sv_status_gnss.gnss_sv_list[sv_index].azimuth,
+	r->sv_status_gnss.gnss_sv_list[sv_index].c_n0_dbhz,
+	r->sv_status_gnss.gnss_sv_list[sv_index].flags
+	);
     return 0;
 }
 
@@ -2289,7 +2134,7 @@ nmea_reader_parse(NmeaReader* const r)
                                       tok_longitudeHemi.p[0]);
         nmea_reader_update_altitude(r, tok_altitude, tok_altitudeUnits);
 
-    } else if ((callback_backup_mtk.base.size == sizeof(GpsCallbacks_mtk)) &&
+    } else if ((gps_mode == 0) &&
                (!memcmp(mtok.p, "GPGSA", 5)||!memcmp(mtok.p, "BDGSA", 5)||!memcmp(mtok.p, "GLGSA", 5))) {
         Token tok_fix = nmea_tokenizer_get(tzer, 2);
         int idx, max = 12;  /*the number of satellites in GPGSA*/
@@ -2326,7 +2171,7 @@ nmea_reader_parse(NmeaReader* const r)
                 DBG("GSA:sv_used_in_fix[%d] = %d\n", sate_id, sv_used_in_fix[sate_id]);
             }
         }
-    } else if ((callback_backup_mtk.base.size == sizeof(GpsCallbacks)) &&
+    } else if ((gps_mode == 1) &&
                (!memcmp(mtok.p, "GPGSA", 5))) {
         Token tok_fix = nmea_tokenizer_get(tzer, 2);
         int idx, max = 12;  /*the number of satellites in GPGSA*/
@@ -2347,11 +2192,11 @@ nmea_reader_parse(NmeaReader* const r)
                         if (sate_id >= 193 && sate_id <= 197) {
                             DBG("[debug mask]QZSS, just ignore. satellite id is %d\n ", sate_id);
                             continue;
-                        } /*else {
+                        } else {
                             r->sv_status_gps.used_in_fix_mask = 0;
                             DBG("[debug mask] satellite is invalid & mask = %d\n",
                                r->sv_status_gps.used_in_fix_mask);
-                        }*/
+                        }
                         VER("GPGSA: invalid sentence, ignore!!");
                         break;
                 }
@@ -2383,7 +2228,7 @@ nmea_reader_parse(NmeaReader* const r)
             nmea_reader_update_bearing(r, tok_bearing);
             nmea_reader_update_speed(r, tok_speed);
         }
-    } else if ((callback_backup_mtk.base.size == sizeof(GpsCallbacks_mtk)) &&
+    } else if ((gps_mode == 0) &&
                (!memcmp(tok.p, "GSV", 3))) {
         Token tok_num = nmea_tokenizer_get(tzer, 1);    // number of messages
         Token tok_seq = nmea_tokenizer_get(tzer, 2);    // sequence number
@@ -2432,7 +2277,7 @@ nmea_reader_parse(NmeaReader* const r)
                 r->sv_count = r->sv_status_gnss.num_svs = 0;
             }
         }
-    } else if ((callback_backup_mtk.base.size == sizeof(GpsCallbacks)) &&
+    } else if ((gps_mode == 1) &&
                (!memcmp(mtok.p, "GPGSV", 5)||!memcmp(mtok.p, "GLGSV", 5))) {
         Token tok_num = nmea_tokenizer_get(tzer, 1);    // number of messages
         Token tok_seq = nmea_tokenizer_get(tzer, 2);    // sequence number
@@ -2526,19 +2371,13 @@ nmea_reader_parse(NmeaReader* const r)
         p += snprintf(p, end-p, " time=%s", asctime(&utc));
         VER(temp);
 #endif
-    char pos[64] = {0};
-    char buff[1024] = {0};
-    int offset = 0;
-    sprintf(pos, "%lf, %lf, %f", r->fix.latitude, r->fix.longitude, r->fix.accuracy);
-    DBG("gps postion str = %s", pos);
-
-    buff_put_int(MNL_CMD_GPS_LOCATION_SYNC_TO_AGPS, buff, &offset);
-    buff_put_string(pos, buff, &offset);
-    mtk_daemon_send(mtk_gps.sock, MTK_HAL2MNLD, buff, sizeof(buff));
-
     if (get_prop()) {
-        memset(pos, 0, sizeof(pos));
-        offset = 0;
+        char pos[64] = {0};
+        sprintf(pos, "%lf, %lf", r->fix.latitude, r->fix.longitude);
+        DBG("gps postion str = %s", pos);
+        char buff[1024] = {0};
+        int offset = 0;
+        DBG("gps postion lati= %f, longi = %f", r->fix.latitude, r->fix.longitude);
         buff_put_int(MNL_CMD_GPS_LOG_WRITE, buff, &offset);
         buff_put_string(pos, buff, &offset);
         mtk_daemon_send(mtk_gps.sock, MTK_HAL2MNLD, buff, sizeof(buff));
@@ -2557,13 +2396,15 @@ nmea_reader_parse(NmeaReader* const r)
     r->fix.flags = 0;
     }
 
-    if (callback_backup_mtk.base.size == sizeof(GpsCallbacks_mtk)) {
+    if (gps_mode == 0) {
+	//TODO: transform GnssSvStatus_mtk to GnssSvStatus ??
         if (r->sv_status_gnss.num_svs != 0 && gps_nmea_end_tag) {
+//	    GnssSvStatus gnss_status;
             DBG("r->sv_status_gnss.num_svs = %d, gps_nmea_end_tag = %d", r->sv_status_gnss.num_svs, gps_nmea_end_tag);
-            r->sv_status_gnss.size = sizeof(MTKLegacyGnssSvStatus);
-#if 0  // TODO
-            callback_backup_mtk.gnss_sv_status_cb(&r->sv_status_gnss);
-#endif
+	    r->sv_status_gnss.size = sizeof(GnssSvStatus);
+//	    gnss_status.size = sizeof(GnssSvStatus);
+//	    mtk2aosp_GnssSvInfo(r->sv_status_gnss.sv_list, gnss_status.sv_list, r->sv_count);
+            callback_backup_mtk.base.gnss_sv_status_cb(&r->sv_status_gnss);
             r->sv_count = r->sv_status_gnss.num_svs = 0;
             memset(sv_used_in_fix, 0, 256*sizeof(int));
         }
@@ -3596,24 +3437,6 @@ void mnld_to_gps_handler(int fd, GpsState* s) {   // from AGPSD->MNLD->HAL->FWK
             ERR("Update EPO file fail\n");
             break;
         }
-        case MNL_CMD_GPS_QUARTER_EPO_REQ: {
-            DBG("MNL_CMD_GPS_QUARTER_EPO_REQ");
-            gps_time.wn = buff_get_int(buff, &offset);
-            gps_time.tow = buff_get_int(buff, &offset);
-            gps_time.sys_time = buff_get_int(buff, &offset);
-            DBG("wn, tow, sys_time = %d, %d, %d\n", gps_time.wn, gps_time.tow, gps_time.sys_time);
-            release_condition(&lock_for_sync[M_QUARTER_EPO]);
-            break;
-        }
-        case MNL_CMD_UPDATE_QEPO_FILE_FAIL: {
-            ERR("Update QEPO file failed\n");
-            break;
-        }
-        case MNL_CMD_UPDATE_QEPO_FILE_DONE: {
-            DBG("Update QEPO file done\n");
-            unlink(QUARTER_FILE_HAL);
-            break;
-        }
 #endif
         case MNL_CMD_GPS_INJECT_TIME_REQ:{
             if (callback_backup_mtk.base.request_utc_time_cb) {
@@ -4288,10 +4111,9 @@ copy_GpsCallbacks_mtk(GpsCallbacks_mtk* dst, GpsCallbacks_mtk* src)
         return 0;
     }
     if (src->base.size == sizeof(GpsCallbacks)) {
-        dst->base = src->base;
-        dst->gnss_sv_status_cb = NULL;
+	dst->base = src->base;
         DBG("Use GpsCallbacks\n");
-        return 0;
+	return 0;
     }
     ERR("Bad callback, size: %d, expected: %d or %d", src->base.size, sizeof(GpsCallbacks_mtk), sizeof(GpsCallbacks));
     return -1;    //  error
@@ -4321,6 +4143,19 @@ mtk_gps_init(GpsCallbacks* callbacks)
     s->init = 1;
     DBG("Set GPS_CAPABILITY_SCHEDULING \n");
     callback_backup_mtk.base.set_capabilities_cb(GPS_CAPABILITY_SCHEDULING);
+    res = property_get("persist.force.gps.mode", chip_id, NULL);
+    if (res) {
+	if (strcmp(chip_id, "gnss") == 0)
+	    gps_mode = 0;
+	else if (strcmp(chip_id, "gps") == 0)
+	    gps_mode = 1;
+    }
+    if (gps_mode < 0) {
+	if (callback_backup_mtk.base.size == sizeof(GpsCallbacks_mtk))
+	    gps_mode = 0;
+	else if (callback_backup_mtk.base.size == sizeof(GpsCallbacks))
+	    gps_mode = 1;
+    }
 #if EPO_SUPPORT
     // get chipid here
     while ((get_time--!= 0) && ((res = property_get("persist.mtk.wcn.combo.chipid", chip_id, NULL)) < 6)) {
@@ -4370,9 +4205,6 @@ mtk_gps_cleanup(void)
 #if EPO_SUPPORT
     s->thread_epo_exit_flag = 1;
     get_condition(&lock_for_sync[M_THREAD_EXIT]);
-    s->thread_epo_quarter_exit_flag = 1;
-    release_condition(&lock_for_sync[M_QUARTER_EPO]);
-    get_condition(&lock_for_sync[M_QUARTER_EPO_EXIT]);
 #endif
     DBG("mtk_gps_cleanup done");
    //     return NULL;
@@ -4486,8 +4318,8 @@ mtk_gps_start()
                     gps_download_epo(s);
                 } else {
                     DBG("EPOHAL is existed and no expired, tell agent to update");
-                    // char buf[] = {MNL_CMD_UPDATE_EPO_FILE};
-                    // char cmd = HAL_CMD_STOP_UNKNOWN;
+                       // char buf[] = {MNL_CMD_UPDATE_EPO_FILE};
+                       // char cmd = HAL_CMD_STOP_UNKNOWN;
                     int offset = 0;
                     char buff[1024] = {0};
 
@@ -4498,16 +4330,6 @@ mtk_gps_start()
                         ERR("Request update epo file fail\n");
                     } else {
                         DBG("Request update epo file successfully\n");
-                        #if 0
-                        err = read(mtk_gps.sock, &cmd, sizeof(cmd));
-                        if (cmd == HAL_CMD_UPDATE_EPO_FILE_DONE) {
-                            DBG("Update EPO file successfully\n");
-                            unlink(EPO_FILE_HAL);
-                        }
-                        else if (cmd == HAL_CMD_UPDATE_EPO_FILE_FAIL) {
-                            ERR("Update EPO file fail\n");
-                        }
-                        #endif
                     }
                 }
             }
@@ -4534,6 +4356,123 @@ mtk_gps_start()
     return 0;
 }
 
+#ifdef GPS_AT_COMMAND
+/*for GPS AT command test*/
+int mtk_gps_test_start(int test_num, int prn_num, int time_delay, int test_mode) {
+
+    GpsState*  s = _gps_state;
+    int err;
+
+    if ((MNL_AT_TEST_STATE != MNL_AT_TEST_UNKNOWN) && test_mode_flag) {
+        DBG("[SMS test mode] Timeout, test_stop() before test_start()");
+        mtk_gps_test_stop();
+    }
+
+    hal_test_data.test_num = test_num;
+    hal_test_data.prn_num = prn_num;
+    hal_test_data.time_delay = time_delay;
+    time(&start_time);
+
+    //  ithis code is moved from stop function to here to keep avg value for AT%GPS(GNSS) or AT%GPS=?(GNSS=?)
+    Avg_CNo = 0;
+    Dev_CNr = (int*)malloc(sizeof(int)*hal_test_data.test_num);
+    memset(Dev_CNr, 0, test_num*sizeof(int));
+
+    if ((0 == hal_test_data.test_num) && (0 == test_mode)) {
+        ERR("%s: test number is 0!!", __FUNCTION__);
+        return -1;
+    }
+    if (1 == test_mode) {
+        DBG("Signal test mode");
+        MNL_AT_SIGNAL_MODE = 1;
+    } else {
+        DBG("Normal test mode");
+        MNL_AT_TEST_FLAG = 1;
+    }
+
+    if (!s->init) {
+        ERR("%s: called with uninitialized state !!", __FUNCTION__);
+        return -1;
+    }
+
+    MNL_AT_TEST_STATE = MNL_AT_TEST_INPROGRESS;
+
+    if ((err = mtk_start())) {
+        ERR("mtk_start err = %d", err);
+        MNL_AT_TEST_STATE = MNL_AT_TEST_UNKNOWN;
+        MNL_AT_TEST_FLAG = 0;
+        return -1;
+    }
+
+    TRC();
+    gps_state_test_start(s);
+    return 0;
+}
+int
+mtk_gps_test_stop()
+{
+    GpsState*  s = _gps_state;
+    int err;
+    test_mode_flag = 1;
+
+    if (!s->init) {
+        ERR("%s: called with uninitialized state !!", __FUNCTION__);
+        return -1;
+    }
+    if ((err = mtk_stop())) {
+        ERR("mtk_stop err = %d", err);
+        return -1;
+    }
+
+    TRC();
+    gps_state_test_stop(s);
+
+    hal_test_data.test_num = 0;
+    hal_test_data.prn_num = 0;
+    hal_test_data.time_delay = 0;
+    MNL_AT_TEST_FLAG = 0;
+    MNL_AT_SIGNAL_MODE = 0;
+    MNL_AT_TEST_STATE = MNL_AT_TEST_UNKNOWN;
+
+    MNL_AT_SET_ALARM       = 0;
+    MNL_AT_CANCEL_ALARM    = 0;
+    MNL_AT_SIGNAL_TEST_BEGIN = 0;
+
+    // release the variable
+    Success_Num = 0;
+    Completed_Num = 0;
+    Wait_Num = 0;
+    CNo = 0;
+    DCNo = 0;
+    Dev_CNo = 0;
+    Err_Code = 1;
+    test_num = 0;
+
+    if (NULL != Dev_CNr) {
+        DBG("Free Dev_CNr");
+        free(Dev_CNr);
+    }
+    return 0;
+}
+
+int
+mtk_gps_test_inprogress()
+{
+    int ret = -1;
+
+    if ((MNL_AT_TEST_STATE == MNL_AT_TEST_DONE) || (MNL_AT_TEST_STATE == MNL_AT_TEST_RESULT_DONE)) {
+        DBG("**AT Command test done!!");
+        ret = MNL_AT_TEST_DONE;
+    } else if (MNL_AT_TEST_STATE == MNL_AT_TEST_INPROGRESS) {
+        DBG("**AT Command test is in progress!!");
+        ret = MNL_AT_TEST_INPROGRESS;
+    } else {
+        DBG("**AT Command test status unknown!!");
+        ret = MNL_AT_TEST_UNKNOWN;
+    }
+    return ret;
+}
+#endif
 int
 mtk_gps_stop()
 {
@@ -4682,14 +4621,14 @@ static int set_retry_alarm_handler(int timeout)
 {
     int err = 0;
 
-    if (retry_timer.fd != C_INVALID_TIMER) {
+    if (retry_timer.fd != (timer_t)C_INVALID_TIMER) {
         if (err = timer_delete(retry_timer.fd)) {
             DBG("timer_delete(%d) = %d (%s)\n", retry_timer.fd, errno, strerror(errno));
             return -1;
         }
-        retry_timer.fd = C_INVALID_TIMER;
+        retry_timer.fd = (timer_t)C_INVALID_TIMER;
     }
-    if (retry_timer.fd == C_INVALID_TIMER) {
+    if (retry_timer.fd == (timer_t)C_INVALID_TIMER) {
         memset(&retry_timer.evt, 0x00, sizeof(retry_timer.evt));
         retry_timer.evt.sigev_value.sival_ptr = &retry_timer.fd;
         retry_timer.evt.sigev_value.sival_int = timeout;
@@ -4711,286 +4650,6 @@ static int set_retry_alarm_handler(int timeout)
     DBG("(%d, %d)\n", retry_timer.fd, retry_timer.expire);
     return 0;
 }
-
-static void
-gps_download_quarter_epo_file_name(int count) {
-    if (gps_epo_type == 1) {
-        if (count == 1) {
-            strcpy(quarter_epo_file_name, "QG_R_1.DAT");
-            strcpy(quarter_epo_md_file_name, "QG_R_1.MD5");
-        } else if (count == 2) {
-            strcpy(quarter_epo_file_name, "QG_R_2.DAT");
-            strcpy(quarter_epo_md_file_name, "QG_R_2.MD5");
-        } else if (count == 3) {
-            strcpy(quarter_epo_file_name, "QG_R_3.DAT");
-            strcpy(quarter_epo_md_file_name, "QG_R_3.MD5");
-        } else if (count == 4) {
-            strcpy(quarter_epo_file_name, "QG_R_4.DAT");
-            strcpy(quarter_epo_md_file_name, "QG_R_4.MD5");
-        } else if (count == 5) {
-            strcpy(quarter_epo_file_name, "QG_R_5.DAT");
-            strcpy(quarter_epo_md_file_name, "QG_R_5.MD5");
-        }
-        DBG("quarter_epo_file_name=%s, quarter_epo_md_file_name=%s\n",
-        quarter_epo_file_name, quarter_epo_md_file_name);
-    } else if (gps_epo_type == 0) {
-        if (count == 1) {
-            strcpy(quarter_epo_file_name, "QG_R_1.DAT");
-            strcpy(quarter_epo_md_file_name, "QG_R_1.MD5");
-        } else if (count == 2)  {
-            strcpy(quarter_epo_file_name, "QG_R_2.DAT");
-            strcpy(quarter_epo_md_file_name, "QG_R_2.MD5");
-        } else if (count == 3) {
-            strcpy(quarter_epo_file_name, "QG_R_3.DAT");
-            strcpy(quarter_epo_md_file_name, "QG_R_3.MD5");
-        } else if (count == 4) {
-            strcpy(quarter_epo_file_name, "QG_R_4.DAT");
-            strcpy(quarter_epo_md_file_name, "QG_R_4.MD5");
-        } else if (count == 5) {
-            strcpy(quarter_epo_file_name, "QG_R_5.DAT");
-            strcpy(quarter_epo_md_file_name, "QG_R_5.MD5");
-        }
-        DBG("quarter_epo_file_name=%s, quarter_epo_md_file_name=%s\n",
-        quarter_epo_file_name, quarter_epo_md_file_name);
-    }
-}
-
-CURLcode curl_easy_download(char* url, char* filename);
-extern char* getEpoUrl(char* filename, char* key);
-static int counter = 1;
-static int Qepo_res = 0;
-static void curl_easy_download_quarter_epo(void) {
-    int res_val;
-    CURLcode res;
-    char gps_epo_md_file_temp[40] = {0};
-    char gps_epo_md_key[70] = {0};
-    char* url = NULL;
-    char* key = NULL;
-    char* md_url = NULL;
-    char count_str[5]={0};
-    TRC();
-
-    strcat(gps_epo_md_file_temp, "/data/misc/gps/");
-    strcat(gps_epo_md_file_temp, quarter_epo_md_file_name);
-
-    strcpy(gps_epo_md_key, "0000000000000000");
-    memset(count_str,0,sizeof(count_str));
-    sprintf(count_str,"%d", counter);
-    strcat(gps_epo_md_key, "&counter=");
-    strcat(gps_epo_md_key, count_str);
-    md_url = getEpoUrl(quarter_epo_md_file_name, gps_epo_md_key);
-    DBG("md_url = %s\n", md_url);
-    if (md_url == NULL) {
-        DBG("getEpoUrl failed!\n");
-        return CURLE_FAILED_INIT;
-    }
-    res = curl_easy_download(md_url, gps_epo_md_file_temp);
-    DBG("md file curl_easy_download res = %d\n", res);
-    free(md_url);
-    memset(gps_epo_md_key, 0 , sizeof(gps_epo_md_key));
-    if (res == 0) {
-        FILE *fp = NULL;
-        char* key_temp = NULL;
-        int len = 0;
-        fp = fopen(gps_epo_md_file_temp, "r");
-        if (NULL == fp) {
-            strcpy(gps_epo_md_key, "0000000000000000");
-        } else {
-            len = fread(gps_epo_md_key, sizeof(char), sizeof(char)*48, fp);
-            key_temp = gps_epo_md_key;
-            DBG("gps_epo_md_key before cpy= %s, len=%d\n", gps_epo_md_key, len);
-            memcpy(gps_epo_md_key, key_temp+32, 16);  // comment by rayjf li
-            gps_epo_md_key[16] = '\0';
-            fclose(fp);
-            unlink(gps_epo_md_file_temp);
-        }
-        counter = 1;
-    } else {
-        counter++;
-        strcpy(gps_epo_md_key, "0000000000000000");
-    }
-    DBG("gps_epo_md_key = %s\n", gps_epo_md_key);
-    memset(count_str,0,sizeof(count_str));
-    sprintf(count_str,"%d", counter);
-    strcat(gps_epo_md_key, "&counter=");
-    strcat(gps_epo_md_key, count_str);
-    url = getEpoUrl(quarter_epo_file_name, gps_epo_md_key);
-
-    DBG("url = %s\n", url);
-    if (url == NULL) {
-        DBG("getEpoUrl failed!\n");
-        return CURLE_FAILED_INIT;
-    }
-    res = curl_easy_download(url, QUARTER_FILE_HAL);
-    DBG("epo file curl_easy_download res = %d\n", res);
-    free(url);
-    Qepo_res = res;
-    if (res == 0) {
-        counter = 1;
-        res_val = chmod(QUARTER_FILE_HAL, S_IRUSR | S_IWUSR | S_IXUSR | S_IRGRP | S_IWGRP | S_IROTH);
-        DBG("chmod res_val = %d, %s\n", res_val, strerror(errno));
-    } else {
-        counter++;
-    }
-    return res;
-}
-
-static void quarter_epo_notice_mnl_update() {
-    char buff[1024] = {0};
-    int offset = 0;
-
-    buff_put_int(MNL_CMD_GPS_QUARTER_EPO_UPDATE, buff, &offset);
-    buff_put_int(Qepo_res, buff, &offset);
-    if (g_agps_ctx.send_fd >= 0) {
-        int res = mtk_daemon_send(g_agps_ctx.send_fd, MTK_HAL2MNLD, buff, sizeof(buff));
-        DBG("Request update qepo file successfully\n");
-    } else {
-        ERR("g_agps_ctx.send_fd is not initialized\n");
-    }
-    return 0;
-}
-static void quarter_epo_notice_mnl_status() {
-    char buff[1024] = {0};
-    int offset = 0;
-
-    buff_put_int(MNL_CMD_GPS_QUARTER_EPO_STATUS, buff, &offset);
-    buff_put_int(Qepo_res, buff, &offset);
-    if (g_agps_ctx.send_fd >= 0) {
-        int res = mtk_daemon_send(g_agps_ctx.send_fd, MTK_HAL2MNLD, buff, sizeof(buff));
-        DBG("Request update qepo status successfully\n");
-    } else {
-        ERR("g_agps_ctx.send_fd is not initialized, qepo status\n");
-    }
-    return 0;
-}
-
-static int pre_day = 0;
-static int server_not_updated = 0;
-static void quarter_epo_download_process(void) {
-    DBG("quarter_epo_download_process begin");
-    int index = 1;
-    INT32 SecofDay = gps_time.tow % 86400;
-
-    if ((SecofDay > 300) && (SecofDay <= 21900)) {
-        index = 1;
-    } else if ((SecofDay > 21900) && (SecofDay <= 43500)) {
-        index = 2;
-    } else if ((SecofDay > 43500) && (SecofDay <= 65100)) {
-        index = 3;
-    } else if ((SecofDay > 65100) && (SecofDay <= 85500)) {
-        index = 4;
-    } else if ((SecofDay <= 300) || (SecofDay > 85500)) {
-        if (server_not_updated) {
-            index = 4;
-        } else {
-            index = 5;
-        }
-    }
-
-    if (pre_day) {
-        index = 5;
-    }
-    DBG("SecofDay = %d , index = %d\n", SecofDay, index);
-    gps_download_quarter_epo_file_name(index);
-    curl_easy_download_quarter_epo();
-}
-
-static int
-mtk_gps_sys_epo_period_start(int fd, unsigned int* u4GpsSecs, time_t* uSecond);
-void GpsToUtcTime(int i2Wn, double dfTow, time_t* uSecond);
-
-static int is_quarter_epo_valid(void) {
-    unsigned int u4GpsSecs_start;  // GPS seconds
-    time_t uSecond_start;   // UTC seconds
-    time_t mnl_time;
-    time_t *mnl_gps_time = NULL;
-    int fd = 0;
-    int ret = 0;
-
-    fd = open(QUARTER_FILE_HAL, O_RDONLY);
-    if (fd < 0) {
-        ERR("Open QEPO fail, return\n");
-        return ret;
-    } else {
-        if (mtk_gps_sys_epo_period_start(fd, &u4GpsSecs_start, &uSecond_start)) {
-            ERR("Read QEPO file failed\n");
-            close(fd);
-            return ret;
-        } else {
-            mnl_gps_time = &mnl_time;
-            DBG("gps_time.wn, tow %d, %d\n", gps_time.wn, gps_time.tow);
-            GpsToUtcTime(gps_time.wn, gps_time.tow, mnl_gps_time);
-            DBG("The Start time of QEPO file is %lld\n", (long long)uSecond_start);
-            DBG("The start time of QEPO file is %s\n", ctime(&uSecond_start));
-            DBG("GPS time: %s\n", ctime(mnl_gps_time));
-
-            if (((mnl_time - uSecond_start) >= 0) && ((mnl_time - uSecond_start) < (6*60*60))) {
-                ret = 1;
-            } else {
-                ret = 0;
-                if (uSecond_start - mnl_time >= (18*60*60)) {
-                    // download time 23:55, server has updated
-                    pre_day = 1;
-                } else {
-                    pre_day = 0;
-                }
-                if (mnl_time - uSecond_start >= (24*60*60)) {
-                   // download time 00:04,server has not updated
-                   server_not_updated = 1;
-                } else {
-                    server_not_updated = 0;
-                }
-            }
-        }
-        close(fd);
-    }
-    return ret;
-}
-static void *thread_quarter_epo_file_download(void* arg) {
-    GpsState* s = (GpsState *)arg;
-    DBG("Quarter EPO thread start");
-    init_condition(&lock_for_sync[M_QUARTER_EPO]);
-    while (1) {
-        int try_time = 10;  // for network issue download failed retry.
-        int qepo_valid = 0;
-
-        get_condition(&lock_for_sync[M_QUARTER_EPO]);
-        if (s->thread_epo_quarter_exit_flag == 1) {
-            DBG("Quarter EPO thread exit\n");
-            break;
-        }
-        qepo_download_finished = 0;
-        DBG("qepo_download_finished = 0");
-        quarter_epo_download_process();
-        while (((qepo_valid = is_quarter_epo_valid()) == 0) && (try_time > 0) && (nw_connected == 1)) {
-            try_time--;
-
-            DBG("qepo download failed try again, try_time = %d\n", try_time);
-            quarter_epo_download_process();
-        }
-        DBG("try time is %d, qepo_valid is %d\n", try_time, qepo_valid);
-        if (try_time < 10) {
-            try_time = 10;
-        }
-        if (server_not_updated) {
-            Qepo_res = CURLE_RECV_ERROR;  // server has not updated
-        }
-        if (started) {
-            if (qepo_valid) {
-                quarter_epo_notice_mnl_update();
-                DBG("qepo_valid = 1, quarter_epo_notice_mnl_update send to mnl");
-            } else {
-                quarter_epo_notice_mnl_status();
-                DBG("qepo_valid = 0, quarter_epo_notice_mnl_status send to mnl");
-            }
-            qepo_download_finished = 1;
-            DBG("qepo_download_finished = 1");
-        }
-    }
-    release_condition(&lock_for_sync[M_QUARTER_EPO_EXIT]);
-    DBG("Quarter EPO thread exit done");
-    return NULL;
-}
 int mtk_gps_epo_file_update();
 static void *thread_epo_file_update(void* arg) {
 
@@ -5004,7 +4663,7 @@ static void *thread_epo_file_update(void* arg) {
             break;
         }
         gps_download_epo_enable();
-        if (s->epo_data_updated == 1 && qepo_download_finished == 1) {
+        if (s->epo_data_updated == 1) {
             DBG("EPO data download begin...");
             epo_download_failed = 0;
                // s->epo_data_updated = 0;
@@ -5016,7 +4675,7 @@ static void *thread_epo_file_update(void* arg) {
         }
         // DBG("epo_download_retry =%d, started=%d\n", epo_download_retry, started);
         if (started || (nw_type == nw_wifi)) {
-            if (nw_connected && epo_download_failed && epo_download_retry && qepo_download_finished == 1) {
+            if (nw_connected && epo_download_failed && epo_download_retry) {
                 // if download has failed last time, we should complete downloading.
                 long long uTime[3] ={0};
                 //  time_t time_st;
@@ -5105,7 +4764,7 @@ int mtk_gps_epo_interface_init(GpsXtraCallbacks* callbacks) {
         mGpsXtraCallbacks = *callbacks;
         ret = 0;
     }
-    retry_timer.fd = C_INVALID_TIMER;
+    retry_timer.fd = (timer_t)C_INVALID_TIMER;
 
     // start thread to write data to file
     ret = pthread_create(&s->thread_epo, NULL, thread_epo_file_update, s);
@@ -5114,14 +4773,6 @@ int mtk_gps_epo_interface_init(GpsXtraCallbacks* callbacks) {
         return ret;
     }
     s->thread_epo_exit_flag = 0;
-    DBG("thread_epo_file_update created done");
-
-    ret = pthread_create(&s->thread_quarter_epo, NULL, thread_quarter_epo_file_download, s);
-    if (0 != ret) {
-        ERR("Quarter EPO thread create fail: %s\n", strerror(errno));
-        return ret;
-    }
-    s->thread_epo_quarter_exit_flag = 0;
     DBG("mtk_gps_epo_interface_init done");
     return ret;
 }
@@ -5213,7 +4864,6 @@ void mtk_gps_navigation_close() {
 
     gpsnavigation_init_flag = 0;
     DBG("mtk_gps_navigation_close done\n");
-
 }
 
 static const GpsNavigationMessageInterface mtkGpsNavigationMessageInterface = {
@@ -5337,7 +4987,6 @@ void GpsToUtcTime(int i2Wn, double dfTow, time_t* uSecond)
     //  years).
     unsigned int doy[12] = {0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334};
 
-    DBG("wn, tow, sys_time = %d, %d, %d\n", i2Wn, dfTow, gps_time.sys_time);
     //  Convert time to GPS weeks and seconds
     iDaysElapsed = i2Wn * 7 + ((int)dfTow / 86400) + 5;
     dfSecElapsed = dfTow - ((int)dfTow / 86400) * 86400;
@@ -5412,16 +5061,10 @@ void GpsToUtcTime(int i2Wn, double dfTow, time_t* uSecond)
     target_time.tm_min = pi2Min;
     target_time.tm_sec = pdfSec;
     target_time.tm_isdst = -1;
-    DBG("target_time.tm_year = %d, month = %d, day = %d, hour = %d, min = %d, sec = %d, tm_isdst = %d\n",
-        target_time.tm_year, target_time.tm_mon, target_time.tm_mday,
-        target_time.tm_hour, target_time.tm_min, target_time.tm_sec, target_time.tm_isdst);
-    DBG("*uSecond =%d\n", *uSecond);
     *uSecond = mktime(&target_time);
-    DBG("after *uSecond =%d\n", *uSecond);
     if (*uSecond < 0) {
         ERR("Convert UTC time to seconds fail, return\n");
     }
-    DBG("GPS TO UTC TIME exit\n");
 
 }
 
@@ -5442,7 +5085,7 @@ mtk_gps_sys_epo_period_start(int fd, unsigned int* u4GpsSecs, time_t* uSecond) {
     pu4Tow = (*u4GpsSecs) % 604800;
 
     // TRC();
-    DBG("pi2WeekNo = %d, pu4Tow = %d\n", pi2WeekNo, pu4Tow);
+    // DBG("pi2WeekNo = %d, pu4Tow = %d\n", pi2WeekNo, pu4Tow);
     GpsToUtcTime(pi2WeekNo, pu4Tow, uSecond);   // to get UTC second
     return 0;
 }
@@ -5602,6 +5245,8 @@ CURLcode curl_easy_download(char* url, char* filename)
     }
 
 }
+extern char* getEpoUrl(char* filename, char* key);
+static int counter = 1;
 CURLcode curl_easy_download_epo(void)
 {
     int res_val;
@@ -5654,7 +5299,7 @@ CURLcode curl_easy_download_epo(void)
     }
     else {
         strcpy(gps_epo_md_key, "0000000000000000");
-        counter++;
+        counter ++;
     }
     // DBG("gps_epo_md_key = %s\n", gps_epo_md_key);
     memset(count_str,0,sizeof(count_str));
@@ -5713,7 +5358,7 @@ CURLcode curl_easy_download_epo(void)
         DBG("chmod res_val = %d, %s\n", res_val, strerror(errno));
     } else {
         unlink(gps_epo_data_file_name);
-        counter++;
+        counter ++;
     }
     return res;
 }
@@ -5880,7 +5525,8 @@ int mtk_gps_epo_server_data_is_changed()
         res = mtk_gps_epo_piece_data_start(fd_start, &u4GpsSecs_start, &uSecond_start);
         if (res == 0) {
             uTime_start = (long long)uSecond_start;
-        } else {
+        }
+       else {
             epo_download_failed = 1;
             ret = 1;
             ERR("Get start time failed\n");
@@ -5913,6 +5559,7 @@ int mtk_gps_epo_server_data_is_changed()
         uTime_end = uTime_start;
     }
 
+    // DBG("gps_epo_data_file_start =%s, end =%s\n", gps_epo_data_file_name_start, gps_epo_data_file_name_end);
     DBG("The end time of EPO file is %s, The start time of EPO file is %s\n",
         ctime(&uTime_end), ctime(&uTime_start));
     if ((uTime_start - uTime_end) >= (24*60*60)) {
@@ -6066,6 +5713,6 @@ struct hw_module_t HAL_MODULE_INFO_SYM = {
     .version_minor = 0,
     .id = GPS_HARDWARE_MODULE_ID,
     .name = "Hardware GPS Module",
-    .author = "The MTK GPS Source Project",
+    .author = "The MTK GPS Source Project(modified by daniel_hk)",
     .methods = &gps_module_methods,
 };

@@ -18,12 +18,8 @@
 #define ANDROID_INCLUDE_HARDWARE_GPS_MTK_H
 
 #include <hardware/gps.h>
-#include <hardware/gps_internal.h>
 
 __BEGIN_DECLS
-
-/** Maximum number of GNSS SVs for gps_sv_status_callback(). */
-#define GNSS_MAX_SVS 256
 
 /** Represents GNSS SV information. */
 typedef struct {
@@ -49,7 +45,7 @@ typedef struct {
      * SVs were used for computing the most recent position fix.
      */
     bool used_in_fix;
-} MTKLegacy2GnssSvInfo;
+} GnssSvInfo_mtk;
 
 /** Represents GNSS SV status. */
 typedef struct {
@@ -60,23 +56,16 @@ typedef struct {
     int         num_svs;
 
     /** Contains an array of GNSS SV information. */
-    MTKLegacyGnssSvInfo   sv_list[GNSS_MAX_SVS];
-} MTKLegacy2GnssSvStatus;
-
-/**
- * Callback with GNSS SV status information.
- * Can only be called from a thread created by create_thread_cb.
- */
-typedef void (* MTKLegacygnss_sv_status_callback)(MTKLegacyGnssSvStatus* sv_info);
+    GnssSvInfo_mtk   sv_list[GNSS_MAX_SVS];
+} GnssSvStatus_mtk;
 
 /** GPS callback structure with Mediatek extension. */
 typedef struct _GpsCallbacks_mtk {
     GpsCallbacks base;
 
-    MTKLegacygnss_sv_status_callback gnss_sv_status_cb;
+//    gnss_sv_status_callback gnss_sv_status_cb;
 } GpsCallbacks_mtk;
 
 __END_DECLS
 
 #endif /* ANDROID_INCLUDE_HARDWARE_GPS_MTK_H */
-

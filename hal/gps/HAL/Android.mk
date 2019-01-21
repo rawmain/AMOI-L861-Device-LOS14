@@ -32,7 +32,6 @@
 # have been modified by MediaTek Inc. All revisions are subject to any receiver's
 # applicable license agreements with MediaTek Inc.
 
-ifeq ($(BOARD_GPS_LIBRARIES), true)
 LOCAL_PATH := $(call my-dir)
 
 # HAL module implemenation, not prelinked and stored in
@@ -49,27 +48,31 @@ LOCAL_STATIC_LIBRARIES := libepos
 LOCAL_CFLAGS:= -DEPO_SUPPORT
 endif
 
-LOCAL_SHARED_LIBRARIES := \
-					liblog \
-					libcutils \
-					libhardware \
-					libandroid_runtime \
-					libcurl \
-					libnativehelper \
-					libcrypto \
-					libssl \
-					libz
+ifeq ($(BOARD_USES_AOSP_GPS_HAL), true)
+LOCAL_CFLAGS:= -DAOSP_GPS_HAL
+endif
 
+LOCAL_SHARED_LIBRARIES := \
+	liblog \
+	libcutils \
+	libhardware \
+	libcurl \
+	libandroid_runtime \
+	libnativehelper \
+	libcrypto \
+	libssl \
+	libz
 
 ifeq ($(MTK_TC1_FEATURE), yes)
 LOCAL_CFLAGS:= -DGPS_AT_COMMAND
 endif
 LOCAL_SRC_FILES := gps_mtk_aosp.c
-LOCAL_C_INCLUDES:= $(LOCAL_PATH)/inc
 
-LOCAL_MODULE := gps.$(TARGET_BOARD_PLATFORM)
+LOCAL_C_INCLUDES := \
+	$(LOCAL_PATH)/include \
+	$(LOCAL_PATH)/../../kernel-headers
+
+LOCAL_MODULE := gps.mt6795
 LOCAL_MODULE_TAGS := optional
 
 include $(BUILD_SHARED_LIBRARY)
-#include $(LOCAL_PATH)/libs/Android.mk
-endif
