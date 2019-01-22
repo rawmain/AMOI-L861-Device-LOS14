@@ -70,7 +70,7 @@
 #include <private/android_filesystem_config.h>
 // #include <linux/mtgpio.h>
 
-#if EPO_SUPPORT
+
 #include <curl/curl.h>
 #include <curl/easy.h>
 
@@ -86,7 +86,7 @@
 #define GPS_CONF_FILE_SIZE 100
 #define EPO_CONTROL_FILE_PATH "/data/misc/gps.conf"
 #define IS_SPACE(ch) ((ch == ' ') || (ch == '\t') || (ch == '\n'))
-#endif
+
 
 #define LOCATION_NLP_FIX "/data/misc/gps/LOCATION.DAT"
 #define C_INVALID_FD -1
@@ -255,7 +255,7 @@ typedef struct{
 
 agps_context g_agps_ctx;
 
-#if EPO_SUPPORT
+
 #define  GPS_EPO_FILE_LEN  20
 #define C_INVALID_TIMER -1  /*invalid timer */
 static int gps_epo_period = 3;
@@ -279,7 +279,7 @@ typedef struct retry_alarm
     timer_t fd;
 }RETRY_ALARM_T;
 static RETRY_ALARM_T retry_timer;
-#endif
+
 /*****************************************************************************/
 /*    MTK device control                                                  */
 /*****************************************************************************/
@@ -302,10 +302,10 @@ enum {
     MNL_CMD_GPSNAVIGATION_INIT = 0x17,
     MNL_CMD_GPSNAVIGATION_CLOSE = 0x18,
 
-#if EPO_SUPPORT
+
    MNL_CMD_READ_EPO_TIME = 0x33,
    MNL_CMD_UPDATE_EPO_FILE = 0x34,
-#endif
+
     MNL_CMD_GPS_LOG_WRITE = 0x40,
 
    MNL_CMD_ENABLE_AGPS_DEBUG = 0x42,
@@ -316,13 +316,13 @@ enum {
 
 enum {
     HAL_CMD_STOP_UNKNOWN = -1,
-#if EPO_SUPPORT
+
     HAL_CMD_READ_EPO_TIME_DONE = 0x35,
     HAL_CMD_UPDATE_EPO_FILE_DONE = 0x36,
 
     HAL_CMD_READ_EPO_TIME_FAIL = 0x37,
     HAL_CMD_UPDATE_EPO_FILE_FAIL = 0x38,
-#endif
+
     HAL_CMD_MNL_DIE = 0x41,
     HAL_CMD_GPS_ICON = 0x42,
 
@@ -433,7 +433,7 @@ static int nw_type = 0;
 #define nw_wifi 0x00000001
 #define nw_data 0x00000000
 
-#if EPO_SUPPORT
+
    // zqh: download EPO by request
 static GpsXtraCallbacks mGpsXtraCallbacks;
 typedef struct
@@ -447,7 +447,7 @@ static int epo_download_retry = 1;
 char chip_id[PROPERTY_VALUE_MAX];
 static int gps_mode = -1;
 
-#endif
+
 /*---------------------------------------------------------------------------*/
 typedef struct {
     int sock;
@@ -1679,9 +1679,9 @@ typedef struct {
     int                     fd;
     GpsCallbacks            callbacks;
     pthread_t               thread;
-#if EPO_SUPPORT
+
     pthread_t               thread_epo;
-#endif
+
     int                     control[2];
     int                     sockfd;
     int                     test_time;
@@ -1692,10 +1692,10 @@ typedef struct {
 #if NEED_IPC_WITH_CODEC
     int                     sock_codec;
 #endif
-#if EPO_SUPPORT
+
     int                     epo_data_updated;
     int                     thread_epo_exit_flag;
-#endif
+
 } GpsState;
 
 static GpsState  _gps_state[1];
@@ -2548,7 +2548,7 @@ gps_state_restart(GpsState*  s)
         ERR("%s: could not send CMD_RESTART command: ret=%d: %s",
           __FUNCTION__, ret, strerror(errno));
 }
-#if EPO_SUPPORT
+
 int get_val(char *pStr, char** ppKey, char** ppVal)
 {
     int len = (int)strlen(pStr);
@@ -2755,7 +2755,7 @@ gps_download_epo(GpsState* s)
     gps_epo_file_count = 0;
 #endif
 }
-#endif
+
 #ifdef GPS_AT_COMMAND
 void
 at_command_send_ack(char* ack, int len) {
@@ -3424,7 +3424,7 @@ void mnld_to_gps_handler(int fd, GpsState* s) {   // from AGPSD->MNLD->HAL->FWK
             }
             break;
         }
-#if EPO_SUPPORT
+
         case HAL_CMD_UPDATE_EPO_FILE_DONE: {
             ERR("Update EPO file ok\n");
             if ((epo_download_failed == 0) && (gps_epo_file_count == 0)) {
@@ -3437,7 +3437,7 @@ void mnld_to_gps_handler(int fd, GpsState* s) {   // from AGPSD->MNLD->HAL->FWK
             ERR("Update EPO file fail\n");
             break;
         }
-#endif
+
         case MNL_CMD_GPS_INJECT_TIME_REQ:{
             if (callback_backup_mtk.base.request_utc_time_cb) {
                 DBG("request_utc_time_cb\n");
@@ -3836,12 +3836,12 @@ gps_state_thread(void*  arg)
                            // nmea_reader_update_at_test_result(reader, Err_Code, 0, 0, 0, 0);
                     }
                     #endif
-#if EPO_SUPPORT
+
                     else if (cmd == CMD_DOWNLOAD) {
                         DBG("Send download request in HAL.");
                         mGpsXtraCallbacks.download_request_cb();
                     }
-#endif
+
                     else if (cmd == CMD_STOP) {
                         if (started) {
                             DBG("gps thread stopping");
@@ -4070,7 +4070,7 @@ Fail:
 /*****                                                       *****/
 /*****************************************************************/
 /*****************************************************************/
-#if EPO_SUPPORT
+
 static int
 read_prop(char* name)
 {
@@ -4100,7 +4100,7 @@ read_prop(char* name)
     return 0;
 
 }
-#endif
+
 
 static int
 copy_GpsCallbacks_mtk(GpsCallbacks_mtk* dst, GpsCallbacks_mtk* src)
@@ -4125,10 +4125,10 @@ mtk_gps_init(GpsCallbacks* callbacks)
     GpsState*  s = _gps_state;
     int get_time = 20;
     int res = 0;
-#if EPO_SUPPORT
+
     int cnt = sizeof(mnl_prop_path)/sizeof(mnl_prop_path[0]);
     int idx;
-#endif
+
     if (s->init)
         return 0;
 
@@ -4156,7 +4156,7 @@ mtk_gps_init(GpsCallbacks* callbacks)
 	else if (callback_backup_mtk.base.size == sizeof(GpsCallbacks))
 	    gps_mode = 1;
     }
-#if EPO_SUPPORT
+
     // get chipid here
     while ((get_time--!= 0) && ((res = property_get("persist.mtk.wcn.combo.chipid", chip_id, NULL)) < 6)) {
         ERR("get chip id fail, retry");
@@ -4181,7 +4181,7 @@ mtk_gps_init(GpsCallbacks* callbacks)
             gps_epo_type = 1;
         }
     }
-#endif
+
     return 0;
 }
 
@@ -4202,14 +4202,14 @@ mtk_gps_cleanup(void)
     }
     if (s->init)
         gps_state_done(s);
-#if EPO_SUPPORT
+
     s->thread_epo_exit_flag = 1;
     get_condition(&lock_for_sync[M_THREAD_EXIT]);
-#endif
+
     DBG("mtk_gps_cleanup done");
    //     return NULL;
 }
-#if EPO_SUPPORT
+
 int mtk_gps_epo_file_time_hal(long long uTime[]);
 int
 mtk_epo_is_expired(int wifi_tragger) {
@@ -4264,7 +4264,7 @@ mtk_epo_is_expired(int wifi_tragger) {
         return 0;
     }
 }
-#endif
+
 int
 mtk_gps_start()
 {
@@ -4288,7 +4288,7 @@ mtk_gps_start()
         ERR("mtk_start err = %d", err);
         return -1;
     }
-#if EPO_SUPPORT
+
     gps_download_epo_enable();
     DBG("gps_epo_enable=%d, s->epo_data_updated=%d\n", gps_epo_enable, s->epo_data_updated);
     DBG("nw_type=%d, nw_connected=%d\n", nw_type, nw_connected, epo_download_failed);
@@ -4335,7 +4335,7 @@ mtk_gps_start()
             }
        }
     }
-#endif
+
     get_condition(&lock_for_sync[M_START]);
     DBG("HAL thread has initialiazed\n");
     gps_state_start(s);
@@ -4607,7 +4607,7 @@ static int mtk_gps_set_position_mode(GpsPositionMode mode, GpsPositionRecurrence
     return 0;
 }
 
-#if EPO_SUPPORT
+
 void retry_alarm_handler(sigval_t v)
 {
     int timeout = (int)v.sival_int;
@@ -4802,7 +4802,7 @@ static const GpsXtraInterface mtkGpsXtraInterface = {
     mtk_gps_epo_interface_init,
     mtk_gps_inject_epo_data,
 };
-#endif
+
 
 // download EPO by request end
 int mtk_gps_measurement_init(GpsMeasurementCallbacks* callbacks) {
@@ -4877,10 +4877,10 @@ mtk_gps_get_extension(const char* name)
 {
     TRC();
     DBG("mtk_gps_get_extension name=[%s]\n", name);
-#if EPO_SUPPORT
+
     if (!strcmp(name, GPS_XTRA_INTERFACE))
         return (void*)(&mtkGpsXtraInterface);
-#endif
+
     if (strncmp(name, "agps", strlen(name)) == 0) {
         return &mtkAGpsInterface;
     }
@@ -4901,7 +4901,7 @@ mtk_gps_get_extension(const char* name)
     }
     return NULL;
 }
-#if EPO_SUPPORT
+
 int
 mtk_gps_sys_read_lock(int fd, off_t offset, int whence, off_t len) {
 
@@ -5650,7 +5650,7 @@ int mtk_gps_epo_file_update() {
     }
     return ret;
 }
-#endif
+
 static const GpsInterface  mtkGpsInterface = {
     sizeof(GpsInterface),
     mtk_gps_init,

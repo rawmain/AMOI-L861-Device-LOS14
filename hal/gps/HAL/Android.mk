@@ -39,14 +39,15 @@ LOCAL_PATH := $(call my-dir)
 include $(CLEAR_VARS)
 
 LOCAL_MODULE_RELATIVE_PATH := hw
-ifeq ($(MTK_K64_SUPPORT), yes)
+# ifeq ($(MTK_K64_SUPPORT), yes)
 LOCAL_CFLAGS:= -DHAVE_GPS_HARDWARE_64BIT
-endif
+# endif
 
-ifneq ($(MTK_OPEN_PACKAGE), yes)
+# ifneq ($(MTK_OPEN_PACKAGE), yes)
 LOCAL_STATIC_LIBRARIES := libepos
 LOCAL_CFLAGS:= -DEPO_SUPPORT
-endif
+EPO_SUPPORT := true
+# endif
 
 ifeq ($(BOARD_USES_AOSP_GPS_HAL), true)
 LOCAL_CFLAGS:= -DAOSP_GPS_HAL
@@ -63,9 +64,9 @@ LOCAL_SHARED_LIBRARIES := \
 	libssl \
 	libz
 
-ifeq ($(MTK_TC1_FEATURE), yes)
-LOCAL_CFLAGS:= -DGPS_AT_COMMAND
-endif
+#ifeq ($(MTK_TC1_FEATURE), yes)
+#LOCAL_CFLAGS:= -DGPS_AT_COMMAND
+#endif
 LOCAL_SRC_FILES := gps_mtk_aosp.c
 
 LOCAL_C_INCLUDES := \
