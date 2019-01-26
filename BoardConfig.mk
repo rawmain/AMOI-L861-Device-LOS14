@@ -277,12 +277,18 @@ BOARD_MKBOOTIMG_ARGS := \
   --second_offset 0x00f00000 \
   --tags_offset 0x0df88000 \
   --board 1453346013
-TARGET_PREBUILT_KERNEL := $(LOCAL_PATH)/prebuilt/kernel
+#TARGET_PREBUILT_KERNEL := $(LOCAL_PATH)/prebuilt/kernel
+
+TARGET_KERNEL_SOURCE := kernel/openstone/stonexone
+TARGET_KERNEL_CONFIG := HNR108_defconfig
+TARGET_KERNEL_CROSS_COMPILE_PREFIX := aarch64-linux-android-
+BOARD_KERNEL_IMAGE_NAME := Image.gz-dtb
+TARGET_KMODULES := true
 
 TARGET_KMODULES := true
 
 # Hack for building without kernel sources
-$(shell mkdir -p $(OUT)/obj/KERNEL_OBJ/usr)
+#$(shell mkdir -p $(OUT)/obj/KERNEL_OBJ/usr)
 # remove this when 6.0 Kernel is available
 # POLICYVERS := 29
 
@@ -404,7 +410,7 @@ TW_OEM_BUILD := false
 TWRP_INCLUDE_LOGCAT := true
 TWHAVE_SELINUX := false
 #TW_USE_TOOLBOX := false
-TARGET_PREBUILT_RECOVERY_KERNEL := $(LOCAL_PATH)/prebuilt/kernel
+#TARGET_PREBUILT_RECOVERY_KERNEL := $(LOCAL_PATH)/prebuilt/kernel
 TARGET_RECOVERY_PIXEL_FORMAT := "RGBA_8888"
 DEVICE_RESOLUTION := 2560x1440
 DEVICE_SCREEN_WIDTH := 2560
